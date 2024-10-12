@@ -14,3 +14,10 @@ build-GetRandomGiveawayWinnerFunction:
 
 build-SearchEventFunction:
 	$(MAKE) build LAMBDA_FILE=events/search_lambda.py ARTIFACTS_DIR=$(ARTIFACTS_DIR)
+
+build-JoinEventFunction:
+	$(MAKE) build LAMBDA_FILE=events/join_event_lambda.py ARTIFACTS_DIR=$(ARTIFACTS_DIR)
+
+build-LeaveEventFunction:
+	$(MAKE) build LAMBDA_FILE=events/leave_event_lambda.py ARTIFACTS_DIR=$(ARTIFACTS_DIR)
+
