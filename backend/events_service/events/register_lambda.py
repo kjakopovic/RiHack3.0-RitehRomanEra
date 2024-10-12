@@ -3,10 +3,12 @@ import logging
 import uuid
 import boto3
 import os
+from decimal import Decimal
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
+#TODO: uzmi longitude i latitude iz cluba
 def lambda_handler(event, context):
     try:
         event = json.loads(event.get('body')) if 'body' in event else event
@@ -91,6 +93,14 @@ def lambda_handler(event, context):
         event_id = str(uuid.uuid4())
         logger.info(f'Generated event ID: {event_id}')
 
+        clubs_table = dynamodb.Table(os.getenv('CLUBS_TABLE_NAME'))
+
+        club_info = clubs_table.get_item(
+            Key={
+                'club_id': event['club_id']
+            }
+        )
+
         # Prepare only the required attributes for saving
         item_to_save = {
             'event_id': event_id,
@@ -99,7 +109,9 @@ def lambda_handler(event, context):
             'description': event['description'],
             'startingAt': event['startingAt'],
             'endingAt': event['endingAt'],
-            'performers': event.get('performers', "")
+            'performers': event.get('performers', ""),
+            'longitude': club_info.get('longitude', Decimal(0)),
+            'latitude': club_info.get('latitude', Decimal(0))
         }
 
         if event.get('genre'):
@@ -119,7 +131,7 @@ def lambda_handler(event, context):
             events_table.put_item(Item=item_to_save)
 
             giveaway_table.put_item(Item={
-                'giveaway_id': uuid.uuid4(),
+                'giveaway_id': str(uuid.uuid4()),
                 'event_id': event_id,
                 'prize': event['giveaway']['prize'],
                 'description': event['giveaway']['description'],
