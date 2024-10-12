@@ -32,7 +32,7 @@ def lambda_handler(event, context):
     dynamodb = boto3.resource('dynamodb')
     clubs_table = dynamodb.Table(os.getenv('CLUBS_TABLE_NAME'))
 
-    logger.info(f'LOGIN - Checking if user exists in the database.')
+    logger.info(f' CLUB LOGIN - Checking if user exists in the database.')
 
     # Find user in the table by email
     try:
@@ -65,7 +65,8 @@ def lambda_handler(event, context):
         }
 
     # Verify password (assuming the password is stored in hashed form)
-    stored_password = response['Item'].get('password')
+    club = response['Item']
+    stored_password = club.get('password')
     
     if not common_handler.check_password(password, stored_password):  # Assume common_handler has password check
         return {
