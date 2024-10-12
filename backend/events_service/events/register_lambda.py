@@ -96,7 +96,6 @@ def lambda_handler(event, context):
             'event_id': event_id,
             'club_id': event['club_id'],
             'title': event['title'],
-            'category': event['category'],
             'description': event['description'],
             'startingAt': event['startingAt'],
             'endingAt': event['endingAt'],

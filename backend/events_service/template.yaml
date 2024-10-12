@@ -188,13 +188,13 @@ Resources:
 
 Outputs:
   EventsTableArn:
-    Description: "Users table ARN"
+    Description: "Events table ARN"
     Value: !GetAtt EventsTable.Arn
     Export:
       Name: !Sub "${AWS::StackName}-EventsTableArn"
 
   EventsTableName:
-    Description: "Users table NAME"
+    Description: "Events table NAME"
     Value: !Ref EventsTable
     Export:
       Name: !Sub "${AWS::StackName}-EventsTableName"
