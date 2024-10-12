@@ -56,7 +56,7 @@ const Home = () => {
           />
           <TouchableOpacity
             onPress={() => {
-              router.push("/(root)/chat");
+              router.push("/filters");
             }}
             className="bg-primary-0 p-4 w-[50px] h-[50px] rounded-full items-center justify-center shadow-sm shadow-neutral-50"
           >
