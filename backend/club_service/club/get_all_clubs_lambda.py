@@ -59,24 +59,24 @@ def lambda_handler(event, context):
             }
 
         try:
-            clubs = clubs_table.scan(
-                FilterExpression=Attr('latitude').between(Decimal(str(min_latitude)), Decimal(str(max_latitude))) &
-                                Attr('longitude').between(Decimal(str(min_longitude)), Decimal(str(max_longitude)))
-            )
-
+            clubs = clubs_table.scan()
             clubs_items = clubs.get('Items', [])
 
             filtered_clubs = []
 
             for club in clubs_items:
-                club_response = {
-                    'club_name': club['club_name'],
-                    'working_days': club['working_days'],
-                    'default_working_hours': club['default_working_hours'],
-                    'club_id': club['club_id'],
-                    'longitude': float(club['longitude']),
-                    'latitude': float(club['latitude'])
-                }
+                if (
+                    min_longitude <= float(club['longitude']) <= max_longitude and
+                    min_latitude <= float(club['latitude']) <= max_latitude
+                    ):
+                    club_response = {
+                        'club_name': club['club_name'],
+                        'working_days': club['working_days'],
+                        'default_working_hours': club['default_working_hours'],
+                        'club_id': club['club_id'],
+                        'longitude': float(club['longitude']),
+                        'latitude': float(club['latitude'])
+                    }
 
                 filtered_clubs.append(club_response)
 
