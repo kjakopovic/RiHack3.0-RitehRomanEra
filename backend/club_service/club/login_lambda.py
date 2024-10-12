@@ -30,13 +30,13 @@ def lambda_handler(event, context):
     logger.info(f'LOGIN - Getting database client.')
     
     dynamodb = boto3.resource('dynamodb')
-    club_table = dynamodb.Table(os.getenv('CLUBS_TABLE_NAME'))
+    clubs_table = dynamodb.Table(os.getenv('CLUBS_TABLE_NAME'))
 
     logger.info(f'LOGIN - Checking if user exists in the database.')
 
     # Find user in the table by email
     try:
-        response = club_table.get_item(
+        response = clubs_table.get_item(
             Key={
                 'club_id': email
             }
@@ -80,7 +80,7 @@ def lambda_handler(event, context):
     
     # Generate JWT and refresh tokens
     access_token = common_handler.generate_access_token(email)
-    refresh_token = common_handler.generate_refresh_token(users_table, email)
+    refresh_token = common_handler.generate_refresh_token(clubs_table, email)
 
     if not access_token or not refresh_token:
         return {
