@@ -12,6 +12,8 @@ logger.setLevel(logging.INFO)
 
 def lambda_handler(event, context):
     error_response, _ = common_handler.check_is_user_authenticated_and_fetch_email_from_jwt(event)
+
+    logger.info(f'GET ALL CLUBS - User is logged in')
     
     if error_response:
         return error_response
@@ -20,6 +22,8 @@ def lambda_handler(event, context):
 
     longitude = event.get('longitude', None)
     latitude = event.get('latitude', None)
+
+    logger.info(f'GET ALL CLUBS - Checking is longitude and latitude are provided.')
 
     if not longitude or not latitude:
         return {
@@ -32,21 +36,34 @@ def lambda_handler(event, context):
             })
         }
     
+    logger.info(f'GET ALL CLUBS - Converting longitude and latitude to decimals.')
+    
     longitude = Decimal(longitude)
     latitude = Decimal(latitude)
     
-    logger.info(f'REGISTER CLUB - Getting table for clubs.')
+    logger.info(f'GET ALL CLUBS - Getting table for clubs.')
 
     dynamodb = boto3.resource('dynamodb')
     clubs_table = dynamodb.Table(os.getenv('CLUBS_TABLE_NAME'))
 
-    logger.info(f'REGISTER CLUB - Checking if club already exists.')
+    try:
+        # Getting clubs in the area
+        min_latitude = latitude - 0.02
+        max_latitude = latitude + 0.02
+        min_longitude = longitude - 0.02
+        max_longitude = longitude + 0.02
+    except Exception as e:
+        logger.error(f'GET ALL CLUBS - Unable to calculate range: {str(e)}')
 
-    # Getting clubs in the area
-    min_latitude = Decimal(latitude - 0.02)
-    max_latitude = Decimal(latitude + 0.02)
-    min_longitude = Decimal(longitude - 0.02)
-    max_longitude = Decimal(longitude + 0.02)
+        return {
+            'statusCode': 500,
+            'headers': {
+                'Content-Type': 'application/json'
+            },
+            'body': json.dumps({
+                'message': f"Unable to calculate range: {str(e)}"
+            })
+        }
 
     try:
         clubs = clubs_table.scan(

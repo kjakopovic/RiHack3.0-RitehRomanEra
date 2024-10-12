@@ -54,7 +54,6 @@ Resources:
         WriteCapacityUnits: 5
 
   # Lambda Functions
-
   RegisterClubFunction:
     Type: AWS::Serverless::Function
     Metadata:
