@@ -53,6 +53,20 @@ Resources:
         ReadCapacityUnits: 5
         WriteCapacityUnits: 5
 
+  EventsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: events
+      AttributeDefinitions:
+        - AttributeName: event_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: event_id
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+
   # Lambda Functions
   RegisterClubFunction:
     Type: AWS::Serverless::Function
@@ -289,6 +303,18 @@ Outputs:
     Value: !Ref ClubsTable
     Export:
       Name: !Sub "${AWS::StackName}-ClubsTableName"
+
+  EventsTableArn:
+    Description: "Users table ARN"
+    Value: !GetAtt EventsTable.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-EventsTableArn"
+
+  EventsTableName:
+    Description: "Users table NAME"
+    Value: !Ref EventsTable
+    Export:
+      Name: !Sub "${AWS::StackName}-EventsTableName"
 
   EndpointURI:
     Description: "API Endpoint URL"
