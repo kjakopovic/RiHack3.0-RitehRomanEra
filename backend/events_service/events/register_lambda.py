@@ -79,6 +79,18 @@ def lambda_handler(event, context):
                     })
                 }
 
+        # Check that at least one of genre, type, or theme is provided
+        if not (event.get('genre') or event.get('type') or event.get('theme')):
+            return {
+                'statusCode': 400,
+                'headers': {
+                    'Content-Type': 'application/json'
+                },
+                'body': json.dumps({
+                    'message': 'At least one of genre, type, or theme must be provided.'
+                })
+            }
+
         # Generate a unique event ID
         event_id = str(uuid.uuid4())
         logger.info(f'Generated event ID: {event_id}')
@@ -93,8 +105,16 @@ def lambda_handler(event, context):
             'startingAt': event['startingAt'],
             'endingAt': event['endingAt'],
             'performers': event['performers'],
-            'giveaway': event['giveaway']
+            'giveaway': event['giveaway'],
         }
+
+        if event.get('genre'):
+            item_to_save['genre'] = event['genre']
+        if event.get('type'):
+            item_to_save['type'] = event['type']
+        if event.get('theme'):
+            item_to_save['theme'] = event['theme']
+
 
         # Initialize a DynamoDB resource
         dynamodb = boto3.resource('dynamodb')
