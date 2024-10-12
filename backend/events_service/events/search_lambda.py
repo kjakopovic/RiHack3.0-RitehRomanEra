@@ -15,11 +15,13 @@ def lambda_handler(event, context):
 
     # Extract query string parameters
     query_params = event.get('queryStringParameters', {})
-    name = query_params.get('name')
-    theme = query_params.get('theme')
-    genre = query_params.get('genre')
-    event_type = query_params.get('type')
-    event_date = query_params.get('date')
+
+    if query_params:
+        name = query_params.get('name')
+        theme = query_params.get('theme')
+        genre = query_params.get('genre')
+        event_type = query_params.get('type')
+        event_date = query_params.get('date')
 
     # Set default date if no date is provided
     if not event_date:
