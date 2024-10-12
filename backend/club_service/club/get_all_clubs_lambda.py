@@ -39,12 +39,11 @@ def lambda_handler(event, context):
         clubs_table = dynamodb.Table(os.getenv('CLUBS_TABLE_NAME'))
 
         try:
-            range = 0.02
             # Getting clubs in the area
-            min_latitude = float(latitude) - range
-            max_latitude = float(latitude) + range
-            min_longitude = float(longitude) - range
-            max_longitude = float(longitude) + range
+            min_latitude = float(latitude) - 0.5
+            max_latitude = float(latitude) + 0.5
+            min_longitude = float(longitude) - 10
+            max_longitude = float(longitude) + 10
         except Exception as e:
             logger.error(f'GET ALL CLUBS - Unable to calculate range: {str(e)}')
 
@@ -67,19 +66,17 @@ def lambda_handler(event, context):
             filtered_clubs = []
 
             for club in clubs_items:
-                logger.info(f'GET ALL CLUBS - longitude {float(min_longitude) <= float(club['longitude']) <= float(max_longitude)}')
-                logger.info(f'GET ALL CLUBS - latitude {float(min_latitude) <= float(club['latitude']) <= float(max_latitude)}')
                 if (
-                    min_longitude <= float(club['longitude']) <= max_longitude and
-                    min_latitude <= float(club['latitude']) <= max_latitude
+                    min_longitude <= float(club["longitude"]) <= max_longitude and
+                    min_latitude <= float(club["latitude"]) <= max_latitude
                     ):
                     club_response = {
                         'club_name': club['club_name'],
                         'working_days': club['working_days'],
                         'default_working_hours': club['default_working_hours'],
                         'club_id': club['club_id'],
-                        'longitude': float(club['longitude']),
-                        'latitude': float(club['latitude'])
+                        'longitude': float(club["longitude"]),
+                        'latitude': float(club["latitude"])
                     }
 
                     filtered_clubs.append(club_response)

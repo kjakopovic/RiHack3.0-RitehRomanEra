@@ -92,7 +92,7 @@ def generate_access_token(user_email):
         logger.info(f'SERVICE - Generating new token.')
 
         # Generating token
-        token_expiration_time = datetime.now(timezone.utc) + timedelta(minutes=5)
+        token_expiration_time = datetime.now(timezone.utc) + timedelta(minutes=30)
 
         return jwt.encode({'email': user_email, 'exp': token_expiration_time}, secrets['jwt_secret'], algorithm='HS256')
     except Exception as e:
