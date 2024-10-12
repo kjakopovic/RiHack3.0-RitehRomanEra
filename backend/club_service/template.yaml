@@ -183,6 +183,7 @@ Resources:
                 - "dynamodb:DeleteItem"
                 - "dynamodb:GetItem"
                 - "dynamodb:UpdateItem"
+                - "dynamodb:Scan"
               Resource: !GetAtt ClubsTable.Arn
             # Secrets Manager for jwt secret permissions
             - Effect: Allow
