@@ -60,8 +60,8 @@ def lambda_handler(event, context):
 
         try:
             clubs = clubs_table.scan(
-                FilterExpression=Attr('latitude').between(min_latitude, max_latitude) &
-                                Attr('longitude').between(min_longitude, max_longitude)
+                FilterExpression=Attr('latitude').between(Decimal(min_latitude), Decimal(max_latitude)) &
+                                Attr('longitude').between(Decimal(min_longitude), Decimal(max_longitude))
             )
 
             clubs_items = clubs.get('Items', [])
