@@ -32,12 +32,17 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera",
-          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone",
+          "cameraPermission": "Allow $(RiConnect) to access your camera",
+          "microphonePermission": "Allow $(RiConnect) to access your microphone",
           "recordAudioAndroid": true
         }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow $(RiConnect) to use your location."
+        }
       ]
-
     ],
     "experiments": {
       "typedRoutes": true

@@ -12,6 +12,15 @@ import filter from "../assets/icons/filter.png";
 import hourglass from "../assets/icons/hourglass.png";
 import calendar from "../assets/icons/calendar.png";
 import share from "../assets/icons/share.png";
+import flipCamera from "../assets/icons/flipCamera.png";
+import close from "../assets/icons/close.png";
+import lock from "../assets/icons/lock.png";
+import question from "../assets/icons/question.png";
+import settings from "../assets/icons/settings.png";
+import map from "../assets/icons/map.png";
+import marker from "../assets/icons/marker.png";
+import dollar from "../assets/icons/dollar.png";
+import time from "../assets/icons/time.png";
 
 export {
   home,
@@ -28,4 +37,13 @@ export {
   hourglass,
   calendar,
   share,
+  flipCamera,
+  close,
+  lock,
+  question,
+  settings,
+  map,
+  marker,
+  dollar,
+  time,
 };

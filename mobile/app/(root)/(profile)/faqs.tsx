@@ -36,7 +36,7 @@ const FAQScreen: React.FC = () => {
   ];
 
   return (
-    <SafeAreaView className="flex-1 bg-secondary-0">
+    <SafeAreaView className="flex-1 bg-neutral-200">
       {/* Back Button */}
       <BackButton />
 
@@ -49,28 +49,28 @@ const FAQScreen: React.FC = () => {
           <View key={index} className="mb-4">
             <TouchableOpacity
               onPress={() => toggleQuestion(index)}
-              className="bg-secondary-50 p-3 rounded-md flex-row justify-between items-center"
+              className="bg-primary-0 p-3 rounded-md flex-row justify-between items-center"
             >
-              <Text className="text-base text-txt-100 font-medium">
+              <Text className="text-base text-white font-medium">
                 {faq.question}
               </Text>
               {openQuestion === index ? (
                 <Image
                   source={icons.arrowUp}
                   className="h-5 w-5"
-                  tintColor={"#333333"}
+                  tintColor="white"
                 />
               ) : (
                 <Image
                   source={icons.arrowDown}
                   className="h-5 w-5"
-                  tintColor={"#333333"}
+                  tintColor="white"
                 />
               )}
             </TouchableOpacity>
 
             {openQuestion === index && (
-              <View className="bg-secondary-100 p-3 mt-2 rounded-md">
+              <View className="bg-neutral-100 p-3 mt-2 rounded-md">
                 <Text className="text-base text-txt-200">{faq.answer}</Text>
               </View>
             )}

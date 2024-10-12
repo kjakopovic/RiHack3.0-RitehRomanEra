@@ -71,6 +71,16 @@ const TabsLayout = () => {
           }}
         />
         <Tabs.Screen
+          name="map"
+          options={{
+            title: "Map",
+            headerShown: false,
+            tabBarIcon: ({ focused }) => (
+              <TabIcon focused={focused} icon={icons.map} title="Map" />
+            ),
+          }}
+        />
+        <Tabs.Screen
           name="notifications"
           options={{
             title: "Notifications",

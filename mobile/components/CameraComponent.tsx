@@ -2,6 +2,8 @@ import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import { useRef, useState } from 'react';
 import { Button, Text, TouchableOpacity, View, Image } from 'react-native';
 
+import * as icons from '@/constants/icons';
+
 export default function App() {
   const [facing, setFacing] = useState<CameraType>('back');
   const [permission, requestPermission] = useCameraPermissions();
@@ -53,7 +55,8 @@ const retakePicture = () => {
         <>
         <Image source={{ uri: photo }} className="flex-1" /> 
         <TouchableOpacity className="absolute top-20 left-5 items-center" onPress={retakePicture}>
-        <Text className="text-xl font-bold text-white">Retake Picture</Text>
+          <View className="rounded-full p-2 z-0 w-12 h-12 bg-black opacity-50" />
+        <Image source={icons.close} className="h-8 w-8 z-10 absolute top-2" tintColor="white" />
       </TouchableOpacity>
       </>
       ) : (
@@ -65,12 +68,14 @@ const retakePicture = () => {
             }}
           onCameraReady={() => setCameraReady(true)}
         >
-          <View className="flex-1 flex-row bg-transparent mb-20">
-            <TouchableOpacity className="flex-1 self-end items-center" onPress={toggleCameraFacing}>
-              <Text className="text-xl font-bold text-white">Flip Camera</Text>
+          <View className="flex-1 flex-row gap-x-5 items-end justify-center bg-transparent mb-20">
+            <TouchableOpacity className="items-center" onPress={toggleCameraFacing}>
+              <Image source={icons.flipCamera} className="h-8 w-8 mb-3" tintColor="white" />
             </TouchableOpacity>
-            <TouchableOpacity className="flex-1 self-end items-center" onPress={takePicture}>
-              <Text className="text-xl font-bold text-white">Take Picture</Text>
+            <TouchableOpacity className="items-center" onPress={takePicture}>
+              <View className="bg-white rounded-full p-2 mr-10">
+                <View className="bg-primary-0 rounded-full w-12 h-12" />
+              </View>
             </TouchableOpacity>
           </View>
         </CameraView>

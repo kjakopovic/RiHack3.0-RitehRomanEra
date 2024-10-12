@@ -36,7 +36,7 @@ const PersonalInfo = () => {
         <View className="mb-4">
           <Text className="text-txt-100 text-lg">First Name:</Text>
           <TextInput
-            className="bg-secondary-100 text-txt-200 text-lg p-2 rounded-md"
+            className="bg-neutral-100 border border-primary-0 text-txt-200 text-lg p-2 rounded-md"
             value={firstName}
             onChangeText={setFirstName}
           />
@@ -45,7 +45,7 @@ const PersonalInfo = () => {
         <View className="mb-4">
           <Text className="text-txt-100 text-lg">Last Name:</Text>
           <TextInput
-            className="bg-secondary-100 text-txt-200 text-lg p-2 rounded-md"
+            className="bg-neutral-100 border border-primary-0 text-txt-200 text-lg p-2 rounded-md"
             value={lastName}
             onChangeText={setLastName}
           />
@@ -54,7 +54,7 @@ const PersonalInfo = () => {
         <View className="mb-4">
           <Text className="text-txt-100 text-lg">Email:</Text>
           <TextInput
-            className="bg-secondary-100 text-txt-200 text-lg p-2 rounded-md"
+            className="bg-neutral-100 border border-primary-0 text-txt-200 text-lg p-2 rounded-md"
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
@@ -64,7 +64,7 @@ const PersonalInfo = () => {
         <View className="mb-4">
           <Text className="text-txt-100 text-lg">Age:</Text>
           <TextInput
-            className="bg-secondary-100 text-txt-200 text-lg p-2 rounded-md"
+            className="bg-neutral-100 border border-primary-0 text-txt-200 text-lg p-2 rounded-md"
             value={age}
             onChangeText={setAge}
             keyboardType="numeric"
@@ -74,7 +74,7 @@ const PersonalInfo = () => {
         <View className="mb-4">
           <Text className="text-txt-100 text-lg">Phone:</Text>
           <TextInput
-            className="bg-secondary-100 text-txt-200 text-lg p-2 rounded-md"
+            className="bg-neutral-100 border border-primary-0 text-txt-200 text-lg p-2 rounded-md"
             value={phone}
             onChangeText={setPhone}
             keyboardType="phone-pad"
@@ -82,7 +82,7 @@ const PersonalInfo = () => {
         </View>
         {/* Logout Button */}
         <TouchableOpacity
-          className="bg-secondary-200 p-2 rounded-md mt-6"
+          className="bg-primary-0 p-2 rounded-md mt-6"
           onPress={handleLogout}
         >
           <Text className="text-white text-base font-bold text-center">

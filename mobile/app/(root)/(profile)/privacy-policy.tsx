@@ -7,9 +7,9 @@ import BackButton from "@/components/BackButton";
 
 const PrivacyPolicy = () => {
   return (
-    <SafeAreaView className="h-full bg-secondary-0">
+    <SafeAreaView className="h-full bg-neutral-200">
       <BackButton />
-      <ScrollView className="bg-secondary-0 p-4">
+      <ScrollView className="bg-neutral-200 p-4">
         <View className="mb-6 mt-20">
           <Text className="text-2xl text-txt-100 font-bold mb-4">
             Privacy Policy
