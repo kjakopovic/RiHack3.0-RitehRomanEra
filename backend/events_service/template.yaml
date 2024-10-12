@@ -3,12 +3,6 @@ Transform: AWS::Serverless-2016-10-31
 Description: >
   events_service
 
-# Parameters:
-#   ProfilePicturesBucket:
-#     Type: String
-#     Description: S3 bucket for profile pictures
-#     Default: lambda-profile-pictures
-
 # Global Settings
 Globals:
   Api:
@@ -56,12 +50,14 @@ Resources:
       Environment:
         Variables:
           EVENTS_TABLE_NAME: !Ref EventsTable
+          CLUBS_TABLE_NAME: !ImportValue club-service-ClubsTableName
+          USERS_TABLE_NAME: !ImportValue user-service-UsersTableName
       Architectures:
         - x86_64
       Policies:
         - Version: '2012-10-17'
           Statement:
-            # Users table permissions
+            # Events table permissions
             - Effect: Allow
               Action:
                 - "dynamodb:PutItem"
@@ -69,6 +65,22 @@ Resources:
                 - "dynamodb:GetItem"
                 - "dynamodb:UpdateItem"
               Resource: !GetAtt EventsTable.Arn
+            # Clubs table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:PutItem"
+                - "dynamodb:DeleteItem"
+                - "dynamodb:GetItem"
+                - "dynamodb:UpdateItem"
+              Resource: !ImportValue club-service-ClubsTableArn
+            # Users table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:PutItem"
+                - "dynamodb:DeleteItem"
+                - "dynamodb:GetItem"
+                - "dynamodb:UpdateItem"
+              Resource: !ImportValue user-service-UsersTableArn
       Events:
         RegisterEventEndpoint:
           Type: HttpApi 

@@ -204,7 +204,7 @@ Resources:
       BuildMethod: makefile
     Properties:
       CodeUri: ./
-      Handler: get_all_clubs_lambda.lambda_handler
+      Handler: refresh_token_lambda.lambda_handler
       Runtime: python3.12
       Environment:
         Variables:
