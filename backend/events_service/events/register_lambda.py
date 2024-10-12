@@ -111,8 +111,8 @@ def lambda_handler(event, context):
             'startingAt': event['startingAt'],
             'endingAt': event['endingAt'],
             'performers': event.get('performers', ""),
-            'longitude': club_info.get('longitude', Decimal(0)),
-            'latitude': club_info.get('latitude', Decimal(0))
+            'longitude': club_info.get('longitude', "0"),
+            'latitude': club_info.get('latitude', "0")
         }
 
         if event.get('genre'):

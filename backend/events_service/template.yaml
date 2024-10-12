@@ -89,6 +89,11 @@ Resources:
               Action:
                 - "dynamodb:*"
               Resource: !GetAtt EventsTable.Arn
+            # Giveaway table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:*"
+              Resource: !GetAtt GiveawayTable.Arn
             # Clubs table permissions
             - Effect: Allow
               Action:
