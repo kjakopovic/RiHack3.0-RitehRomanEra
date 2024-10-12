@@ -46,10 +46,6 @@ Resources:
       AttributeDefinitions:
         - AttributeName: club_id
           AttributeType: S
-        - AttributeName: latitude
-          AttributeType: N
-        - AttributeName: longitude
-          AttributeType: N
       KeySchema:
         - AttributeName: club_id
           KeyType: HASH
