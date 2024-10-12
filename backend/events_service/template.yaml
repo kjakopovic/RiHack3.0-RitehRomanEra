@@ -1,0 +1,97 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  events_service
+
+# Parameters:
+#   ProfilePicturesBucket:
+#     Type: String
+#     Description: S3 bucket for profile pictures
+#     Default: lambda-profile-pictures
+
+# Global Settings
+Globals:
+  Api:
+    Cors:
+      AllowMethods: "'*'"
+      AllowHeaders: "'*'"
+      AllowOrigin: "'*'"
+      AllowCredentials: 'true'
+  Function:
+    Timeout: 60
+    MemorySize: 256
+
+Resources:
+  # API Gateway
+  EventsServiceApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: api-v1
+
+  # DynamoDB Table definition
+  EventsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: events
+      AttributeDefinitions:
+        - AttributeName: event_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: event_id
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+
+  # Lambda Functions
+
+  RegisterEventFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      CodeUri: ./
+      Handler: register_lambda.lambda_handler
+      Runtime: python3.12
+      Environment:
+        Variables:
+          EVENTS_TABLE_NAME: !Ref EventsTable
+      Architectures:
+        - x86_64
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            # Users table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:PutItem"
+                - "dynamodb:DeleteItem"
+                - "dynamodb:GetItem"
+                - "dynamodb:UpdateItem"
+              Resource: !GetAtt EventsTable.Arn
+      Events:
+        RegisterEventEndpoint:
+          Type: HttpApi 
+          Properties:
+            Path: /event/register
+            Method: POST
+            ApiId: !Ref EventsServiceApi
+
+Outputs:
+  EventsTableArn:
+    Description: "Users table ARN"
+    Value: !GetAtt EventsTable.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-EventsTableArn"
+
+  EventsTableName:
+    Description: "Users table NAME"
+    Value: !Ref EventsTable
+    Export:
+      Name: !Sub "${AWS::StackName}-EventsTableName"
+
+  EndpointURI:
+    Description: "API Endpoint URL"
+    Value: !Sub "https://${EventsServiceApi}.execute-api.${AWS::Region}.amazonaws.com/api-v1"
+    Export:
+      Name: EventsServiceApiUrl

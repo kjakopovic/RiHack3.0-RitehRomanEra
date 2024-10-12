@@ -4,7 +4,7 @@
 AWS_REGION="eu-central-1"
 
 # List of services to deploy
-SERVICES=("user_service")
+SERVICES=("user_service", "club_service")
 
 # Save the initial working directory
 ROOT_DIR=$(pwd)

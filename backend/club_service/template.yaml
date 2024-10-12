@@ -1,0 +1,97 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  club_service
+
+# Parameters:
+#   ProfilePicturesBucket:
+#     Type: String
+#     Description: S3 bucket for profile pictures
+#     Default: lambda-profile-pictures
+
+# Global Settings
+Globals:
+  Api:
+    Cors:
+      AllowMethods: "'*'"
+      AllowHeaders: "'*'"
+      AllowOrigin: "'*'"
+      AllowCredentials: 'true'
+  Function:
+    Timeout: 60
+    MemorySize: 256
+
+Resources:
+  # API Gateway
+  ClubServiceApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: api-v1
+
+  # DynamoDB Table definition
+  ClubsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: clubs
+      AttributeDefinitions:
+        - AttributeName: club_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: club_id
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+
+  # Lambda Functions
+
+  RegisterClubFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      CodeUri: ./
+      Handler: register_lambda.lambda_handler
+      Runtime: python3.12
+      Environment:
+        Variables:
+          CLUBS_TABLE_NAME: !Ref ClubsTable
+      Architectures:
+        - x86_64
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            # Users table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:PutItem"
+                - "dynamodb:DeleteItem"
+                - "dynamodb:GetItem"
+                - "dynamodb:UpdateItem"
+              Resource: !GetAtt ClubsTable.Arn
+      Events:
+        RegisterEventEndpoint:
+          Type: HttpApi 
+          Properties:
+            Path: /club/register
+            Method: POST
+            ApiId: !Ref ClubServiceApi
+
+Outputs:
+  ClubsTableArn:
+    Description: "Users table ARN"
+    Value: !GetAtt ClubsTable.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-ClubsTableArn"
+
+  ClubsTableName:
+    Description: "Users table NAME"
+    Value: !Ref ClubsTable
+    Export:
+      Name: !Sub "${AWS::StackName}-ClubsTableName"
+
+  EndpointURI:
+    Description: "API Endpoint URL"
+    Value: !Sub "https://${ClubServiceApi}.execute-api.${AWS::Region}.amazonaws.com/api-v1"
+    Export:
+      Name: ClubServiceApiUrl
