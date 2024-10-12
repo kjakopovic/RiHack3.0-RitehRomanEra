@@ -36,12 +36,35 @@ Resources:
       AttributeDefinitions:
         - AttributeName: club_id
           AttributeType: S
+        - AttributeName: latitude
+          AttributeType: N
+        - AttributeName: longitude
+          AttributeType: N
       KeySchema:
         - AttributeName: club_id
           KeyType: HASH
       ProvisionedThroughput:
         ReadCapacityUnits: 5
         WriteCapacityUnits: 5
+      GlobalSecondaryIndexes:
+        - IndexName: LatIndex
+          KeySchema:
+            - AttributeName: latitude
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+          ProvisionedThroughput:
+            ReadCapacityUnits: 5
+            WriteCapacityUnits: 5
+        - IndexName: LongIndex
+          KeySchema:
+            - AttributeName: longitude
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+          ProvisionedThroughput:
+            ReadCapacityUnits: 5
+            WriteCapacityUnits: 5
 
   # Lambda Functions
 
@@ -75,6 +98,38 @@ Resources:
           Properties:
             Path: /club/register
             Method: POST
+            ApiId: !Ref ClubServiceApi
+
+  GetAllClubsFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      CodeUri: ./
+      Handler: get_all_clubs_lambda.lambda_handler
+      Runtime: python3.12
+      Environment:
+        Variables:
+          CLUBS_TABLE_NAME: !Ref ClubsTable
+      Architectures:
+        - x86_64
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            # Users table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:PutItem"
+                - "dynamodb:DeleteItem"
+                - "dynamodb:GetItem"
+                - "dynamodb:UpdateItem"
+              Resource: !GetAtt ClubsTable.Arn
+      Events:
+        GetAllClubsEndpoint:
+          Type: HttpApi 
+          Properties:
+            Path: /club/get
+            Method: GET
             ApiId: !Ref ClubServiceApi
 
 Outputs:

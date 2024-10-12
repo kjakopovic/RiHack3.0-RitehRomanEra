@@ -21,6 +21,8 @@ def lambda_handler(event, context):
         tags = event['tags']
         default_working_hours = event['default_working_hours']
         working_days = event['working_days']
+        longitude = event['longitude']
+        latitude = event['latitude']
     except Exception as e:
         return {
             'statusCode': 400,
@@ -95,7 +97,9 @@ def lambda_handler(event, context):
                 'club_name': club_name,
                 'tags': tags,
                 'default_working_hours': default_working_hours,
-                'working_days': working_days
+                'working_days': working_days,
+                'longitude': longitude,
+                'latitude': latitude
             }
         )
     except Exception as e:
