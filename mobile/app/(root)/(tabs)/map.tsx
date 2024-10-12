@@ -14,7 +14,7 @@ import * as Location from "expo-location";
 import * as icons from "@/constants/icons";
 import Modal from "react-native-modal";
 import EventCard from "@/components/EventCard";
-import { TouchableOpacity } from "react-native-gesture-handler";
+import { events } from "@/constants/events";
 
 const Map = () => {
   const [location, setLocation] =
@@ -113,8 +113,9 @@ const Map = () => {
               Upcoming Events
             </Text>
             <View className="flex flex-col items-center justify-center mt-5 pb-5">
-              <EventCard />
-              <EventCard />
+              {events.map((event) => (
+                <EventCard key={event.id} event={event} />
+              ))}
             </View>
           </ScrollView>
         </View>

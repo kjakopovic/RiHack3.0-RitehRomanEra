@@ -10,13 +10,15 @@ import * as images from "@/constants/images";
 import CustomSearch from "@/components/CustomSearch";
 import EventCard from "@/components/EventCard";
 import { getFirstTime, saveFirstTime } from "@/lib/secureStore";
+import { events } from "@/constants/events";
 
 const Home = () => {
   const [query, setQuery] = useState<string>("");
   const [introModal, setIntroModal] = useState<boolean>(false);
 
+  // Dummy list of events for testing
+
   useEffect(() => {
-    // Fetch data
     const fetchFirstTime = async () => {
       const firstTIme = await getFirstTime();
 
@@ -45,11 +47,12 @@ const Home = () => {
             </Text>
           </View>
         </View>
+
         <View className="flex flex-row items-center justify-between w-full px-5 mt-10">
           <CustomSearch
             onChangeText={onTextChange}
             searchValue={query}
-            placeholder="Search artists..."
+            placeholder="Search events..."
           />
           <TouchableOpacity
             onPress={() => {
@@ -60,15 +63,19 @@ const Home = () => {
             <Image source={icons.filter} className="h-4 w-[18px]" />
           </TouchableOpacity>
         </View>
+
         <Text className="text-2xl font-bold text-txt-100 px-5 mt-5">
           Upcoming Events
         </Text>
+
         <View className="flex flex-col items-center justify-center mt-5 pb-16">
-          <EventCard />
-          <EventCard />
-          <EventCard />
+          {/* Map over the events array and render EventCard for each event */}
+          {events.map((event) => (
+            <EventCard key={event.id} event={event} />
+          ))}
         </View>
       </ScrollView>
+
       <Modal isVisible={introModal}>
         <View className="bg-neutral-200 h-full w-full items-center justify-center rounded-3xl">
           <ScrollView

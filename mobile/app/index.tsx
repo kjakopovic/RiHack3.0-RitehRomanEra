@@ -19,7 +19,10 @@ export default function Onboarding() {
     <SafeAreaView className="h-full flex flex-col justify-between items-center bg-primary">
       <View className="flex flex-col items-center justify-center h-1/2 mt-24">
         <Image source={images.logo} className="h-[115px] w-28" />
-        <Text className="text-3xl font-medium text-primary-80 mt-5">
+        <Text className="text-3xl font-medium text-txt-100 mt-5">
+          RiConnect
+        </Text>
+        <Text className="text-2xl font-medium text-primary-80 mt-5">
           Connect, Visit, Enjoy
         </Text>
       </View>
