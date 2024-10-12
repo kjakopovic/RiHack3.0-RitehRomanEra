@@ -3,6 +3,7 @@ import bcrypt
 import boto3
 import os
 import logging
+from decimal import Decimal
 
 import backend.common.common as common_handler
 
@@ -98,8 +99,8 @@ def lambda_handler(event, context):
                 'tags': tags,
                 'default_working_hours': default_working_hours,
                 'working_days': working_days,
-                'longitude': longitude,
-                'latitude': latitude
+                'longitude': Decimal(longitude),
+                'latitude': Decimal(latitude)
             }
         )
     except Exception as e:
