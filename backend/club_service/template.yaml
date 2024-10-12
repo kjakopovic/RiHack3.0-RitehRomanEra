@@ -238,6 +238,45 @@ Resources:
             Method: GET
             ApiId: !Ref ClubServiceApi
 
+  UpdateClubFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      CodeUri: ./
+      Handler: update_lambda.lambda_handler
+      Runtime: python3.12
+      Environment:
+        Variables:
+          CLUBS_TABLE_NAME: !Ref ClubsTable
+          JWT_SECRET_NAME: !Ref JwtSecretName
+          SECRETS_REGION_NAME: !Ref SecretsRegionName
+      Architectures:
+        - x86_64
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            # Users table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:PutItem"
+                - "dynamodb:DeleteItem"
+                - "dynamodb:GetItem"
+                - "dynamodb:UpdateItem"
+              Resource: !GetAtt ClubsTable.Arn
+            # Secrets Manager for jwt secret permissions
+            - Effect: Allow
+              Action:
+                - secretsmanager:GetSecretValue
+              Resource: !Ref JwtSecretArn
+      Events:
+        UpdateClubEndpoint:
+          Type: HttpApi 
+          Properties:
+            Path: /club/register
+            Method: POST
+            ApiId: !Ref ClubServiceApi
+
 Outputs:
   ClubsTableArn:
     Description: "Users table ARN"

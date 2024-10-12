@@ -20,3 +20,6 @@ build-LogoutClubFunction:
 
 build-RefreshTokenFunction:
 	$(MAKE) build LAMBDA_FILE=club/refresh_token_lambda.py ARTIFACTS_DIR=$(ARTIFACTS_DIR)
+
+build-UpdateClubFunction:
+	$(MAKE) build LAMBDA_FILE=club/update_lambda.py ARTIFACTS_DIR=$(ARTIFACTS_DIR)
