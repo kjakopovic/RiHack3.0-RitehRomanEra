@@ -24,19 +24,81 @@ Resources:
 
   # DynamoDB Table definition
   EventsTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: events
-      AttributeDefinitions:
-        - AttributeName: event_id
-          AttributeType: S
-      KeySchema:
-        - AttributeName: event_id
-          KeyType: HASH
-      ProvisionedThroughput:
-        ReadCapacityUnits: 5
-        WriteCapacityUnits: 5
-
+  Type: AWS::DynamoDB::Table
+  Properties:
+    TableName: events
+    AttributeDefinitions:
+      - AttributeName: event_id
+        AttributeType: S
+      - AttributeName: latitude
+        AttributeType: S
+      - AttributeName: longitude
+        AttributeType: S
+      - AttributeName: genre
+        AttributeType: S
+      - AttributeName: theme
+        AttributeType: S
+      - AttributeName: type
+        AttributeType: S
+      - AttributeName: startingAt
+        AttributeType: S
+    KeySchema:
+      - AttributeName: event_id
+        KeyType: HASH
+    LocalSecondaryIndexes:
+      - IndexName: latitude-index
+        KeySchema:
+          - AttributeName: event_id
+            KeyType: HASH
+          - AttributeName: latitude
+            KeyType: RANGE
+        Projection:
+          ProjectionType: ALL
+      - IndexName: longitude-index
+        KeySchema:
+          - AttributeName: event_id
+            KeyType: HASH
+          - AttributeName: longitude
+            KeyType: RANGE
+        Projection:
+          ProjectionType: ALL
+      - IndexName: genre-index
+        KeySchema:
+          - AttributeName: event_id
+            KeyType: HASH
+          - AttributeName: genre
+            KeyType: RANGE
+        Projection:
+          ProjectionType: ALL
+      - IndexName: theme-index
+        KeySchema:
+          - AttributeName: event_id
+            KeyType: HASH
+          - AttributeName: theme
+            KeyType: RANGE
+        Projection:
+          ProjectionType: ALL
+      - IndexName: type-index
+        KeySchema:
+          - AttributeName: event_id
+            KeyType: HASH
+          - AttributeName: type
+            KeyType: RANGE
+        Projection:
+          ProjectionType: ALL
+    GlobalSecondaryIndexes:
+      - IndexName: startingAt-index
+        KeySchema:
+          - AttributeName: startingAt
+            KeyType: HASH
+        Projection:
+          ProjectionType: ALL
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
+    ProvisionedThroughput:
+      ReadCapacityUnits: 5
+      WriteCapacityUnits: 5
 
   GiveawayTable:
     Type: AWS::DynamoDB::Table
