@@ -7,9 +7,9 @@ Description: >
 Globals:
   Api:
     Cors:
-      AllowMethods: "'*'"
-      AllowHeaders: "'*'"
-      AllowOrigin: "'*'"
+      AllowMethods: "*"
+      AllowHeaders: "*"
+      AllowOrigin: "*"
       AllowCredentials: 'true'
   Function:
     Timeout: 60
@@ -64,6 +64,7 @@ Resources:
       Environment:
         Variables:
           EVENTS_TABLE_NAME: !Ref EventsTable
+          GIVEAWAY_TABLE_NAME: !Ref GiveawayTable
           CLUBS_TABLE_NAME: !ImportValue club-service-ClubsTableName
           USERS_TABLE_NAME: !ImportValue user-service-UsersTableName
       Architectures:

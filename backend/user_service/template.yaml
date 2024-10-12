@@ -66,9 +66,9 @@ Parameters:
 Globals:
   Api:
     Cors:
-      AllowMethods: "'*'"
-      AllowHeaders: "'*'"
-      AllowOrigin: "'*'"
+      AllowMethods: "*"
+      AllowHeaders: "*"
+      AllowOrigin: "*"
       AllowCredentials: 'true'
   Function:
     Timeout: 60

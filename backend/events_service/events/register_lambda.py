@@ -12,7 +12,7 @@ def lambda_handler(event, context):
     try:
         event = json.loads(event.get('body')) if 'body' in event else event
 
-        logger.info(f'REGISTER CLUB - Checking if every required attribute is found: {event}')
+        logger.info(f'REGISTER EVENT - Checking if every required attribute is found: {event}')
 
         # Define the required attributes and their types
         required_attributes = {
@@ -20,10 +20,8 @@ def lambda_handler(event, context):
             'title': str,
             'category': str,
             'description': str,
-            'startingAt': str,  # Use string for date validation
-            'endingAt': str,    # Use string for date validation
-            'performers': list,
-            'giveaway': dict
+            'startingAt': str,
+            'endingAt': str
         }
 
         # Define the structure of the giveaway object
@@ -104,8 +102,7 @@ def lambda_handler(event, context):
             'description': event['description'],
             'startingAt': event['startingAt'],
             'endingAt': event['endingAt'],
-            'performers': event['performers'],
-            'giveaway': event['giveaway'],
+            'performers': event.get('performers', "")
         }
 
         if event.get('genre'):
@@ -119,10 +116,18 @@ def lambda_handler(event, context):
         # Initialize a DynamoDB resource
         dynamodb = boto3.resource('dynamodb')
         events_table = dynamodb.Table(os.getenv('EVENTS_TABLE_NAME'))
+        giveaway_table = dynamodb.Table(os.getenv('GIVEAWAY_TABLE_NAME'))
 
         # Save the item in the DynamoDB table
         try:
             events_table.put_item(Item=item_to_save)
+
+            giveaway_table.put_item(Item={
+                'giveaway_id': uuid.uuid4(),
+                'prize': event['giveaway']['prize'],
+                'description': event['giveaway']['description'],
+                'name': event['giveaway']['name']
+            })
         except Exception as e:
             logger.error(f'Error saving event to DynamoDB: {str(e)}')
             return {
@@ -144,7 +149,7 @@ def lambda_handler(event, context):
             },
             'body': json.dumps({
                 'message': 'Event registered successfully!',
-                'event_id': event_id  # Return the event ID for confirmation
+                'event_id': event_id
             })
         }
     except Exception as e:
