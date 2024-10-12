@@ -98,11 +98,14 @@ def lambda_handler(event, context):
         dynamodb = boto3.resource('dynamodb')
         clubs_table = dynamodb.Table(os.getenv('CLUBS_TABLE_NAME'))
 
-        club_info = clubs_table.get_item(
+        club_info_response = clubs_table.get_item(
             Key={
                 'club_id': email
             }
         )
+        club_info = club_info_response.get('Item', {})    
+        logger.info(f'REGISTER EVENT - Club info response: {club_info_response}')
+        logger.info(f'REGISTER EVENT - Club info: {club_info}')
 
         # Prepare only the required attributes for saving
         item_to_save = {
