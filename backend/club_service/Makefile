@@ -8,3 +8,6 @@ build:
 
 build-RegisterClubFunction:
 	$(MAKE) build LAMBDA_FILE=club/register_lambda.py ARTIFACTS_DIR=$(ARTIFACTS_DIR)
+
+build-LoginClubFunction:
+	$(MAKE) build LAMBDA_FILE=club/login_lambda.py ARTIFACTS_DIR=$(ARTIFACTS_DIR)

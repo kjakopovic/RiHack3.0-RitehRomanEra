@@ -77,6 +77,37 @@ Resources:
             Method: POST
             ApiId: !Ref ClubServiceApi
 
+  LoginClubFunction:
+  Type: AWS::Serverless::Function
+  Metadata:
+    BuildMethod: makefile
+  Properties:
+    CodeUri: ./
+    Handler: login_lambda.lambda_handler  # Refers to the login Lambda function you created.
+    Runtime: python3.12
+    Environment:
+      Variables:
+        CLUBS_TABLE_NAME: !Ref ClubsTable  # Using ClubsTable instead of UsersTable.
+    Architectures:
+      - x86_64
+    Policies:
+      - Version: '2012-10-17'
+        Statement:
+          # Grant permissions to interact with the DynamoDB Clubs table
+          - Effect: Allow
+            Action:
+              - "dynamodb:GetItem"
+              - "dynamodb:UpdateItem"
+            Resource: !GetAtt ClubsTable.Arn
+    Events:
+      LoginClubEndpoint:
+        Type: HttpApi  # Defines the API Gateway trigger
+        Properties:
+          Path: /club/login  # The API endpoint for login
+          Method: POST  # HTTP POST method for login
+          ApiId: !Ref ClubServiceApi  # Reference to the API resource
+          
+
 Outputs:
   ClubsTableArn:
     Description: "Users table ARN"
