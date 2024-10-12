@@ -75,7 +75,7 @@ def lambda_handler(event, context):
 
         if points is not None:
             update_expression += "points = :points, "
-            expression_attribute_values[':points'] = response.get('Item').get('points') + points
+            expression_attribute_values[':points'] = (0 if response.get('Item') is None or response['Item'].get('points') is None else response['Item'].get('points')) + points
 
         # Check if there is anything to update
         if expression_attribute_values:

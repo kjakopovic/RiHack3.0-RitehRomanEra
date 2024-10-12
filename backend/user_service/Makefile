@@ -50,3 +50,6 @@ build-UpdateUsersPublicInfoFunction:
 
 build-UpdateUsersPrivateInfoFunction:
 	$(MAKE) build LAMBDA_FILE=profile/update_users_private_info_lambda.py ARTIFACTS_DIR=$(ARTIFACTS_DIR)
+
+build-GetUsersOrderedByPointsFunction:
+	$(MAKE) build LAMBDA_FILE=profile/get_all_users_ordered_by_points.py ARTIFACTS_DIR=$(ARTIFACTS_DIR)
