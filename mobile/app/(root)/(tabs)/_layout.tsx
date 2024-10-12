@@ -24,14 +24,14 @@ const TabIcon = ({
   >
     <View
       className={`rounded-full w-[30px] h-[30px] items-center justify-center ${
-        focused ? "bg-neutral-200" : ""
+        focused ? "bg-transparent" : ""
       }`}
     >
       <Image
         source={icon}
         tintColor={focused ? "black" : "white"}
         resizeMode="contain"
-        className={`${focused ? "w-6 h-6" : "w-7 h-7"} ${iconStyles}`}
+        className={`${focused ? "w-6 h-6 ml-2" : "w-7 h-7"} ${iconStyles}`}
       />
     </View>
     {focused && (

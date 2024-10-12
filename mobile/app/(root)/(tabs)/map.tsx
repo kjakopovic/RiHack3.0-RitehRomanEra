@@ -8,7 +8,7 @@ import {
   Image,
   ScrollView,
 } from "react-native";
-import MapView, { Marker } from "react-native-maps";
+import MapView, { Marker, Region } from "react-native-maps";
 import * as Location from "expo-location";
 
 import * as icons from "@/constants/icons";
@@ -16,17 +16,51 @@ import Modal from "react-native-modal";
 import EventCard from "@/components/EventCard";
 import { events } from "@/constants/events";
 
+interface Club {
+  club_id: string;
+  club_name: string;
+  default_working_hours: string;
+  latitude: number;
+  longitude: number;
+  working_days: string;
+  address?: string;
+}
+
+interface GetClubsResponse {
+  clubs: Club[];
+  message: string;
+}
+
 const Map = () => {
   const [location, setLocation] =
     useState<Location.LocationObjectCoords | null>(null);
-  const [region, setRegion] = useState({
-    latitude: 37.78825, // default lat (example)
-    longitude: -122.4324, // default long (example)
+  const [region, setRegion] = useState<Region>({
+    latitude: 37.78825, // default latitude
+    longitude: -122.4324, // default longitude
     latitudeDelta: 0.0922,
     longitudeDelta: 0.0421,
   });
   const [loading, setLoading] = useState(true); // Loading state
   const [clubModalVisible, setClubModalVisible] = useState(false);
+
+  // State to store clubs and selected club
+  const [clubs, setClubs] = useState<Club[]>([]); // Stores the list of clubs
+  const [selectedClub, setSelectedClub] = useState<Club | null>(null); // Stores the club selected by the user
+  const [selectedClubAddress, setSelectedClubAddress] =
+    useState<Location.LocationGeocodedAddress | null>(null);
+
+  const getAllClubs = async () => {
+    try {
+      const response = await fetch(
+        `https://agw3r0w73c.execute-api.eu-central-1.amazonaws.com/api-v1/club/get?longitude=${region.longitude}&latitude=${region.latitude}`
+      );
+      const data: GetClubsResponse = await response.json();
+      setClubs(data.clubs); // Store the clubs in state
+      console.log(data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   useEffect(() => {
     (async () => {
@@ -43,18 +77,51 @@ const Map = () => {
       const { latitude, longitude } = userLocation.coords;
 
       // Update the region with the user's location
-      setRegion({
+      const userRegion: Region = {
         latitude,
         longitude,
         latitudeDelta: 0.0922,
         longitudeDelta: 0.0421,
-      });
+      };
+      setRegion(userRegion);
+
+      console.log("Region:", userRegion);
 
       // Set the user's location to state
       setLocation(userLocation.coords);
-      setLoading(false); // Stop loading after fetching location
+
+      // Fetch clubs after setting location
+      await getAllClubs();
+
+      setLoading(false); // Stop loading after fetching location and clubs
     })();
   }, []);
+
+  // Perform reverse geocoding when a club is selected
+  useEffect(() => {
+    if (selectedClub) {
+      // Perform reverse geocoding
+      (async () => {
+        try {
+          const addressArray = await Location.reverseGeocodeAsync({
+            latitude: selectedClub.latitude,
+            longitude: selectedClub.longitude,
+          });
+          if (addressArray.length > 0) {
+            setSelectedClubAddress(addressArray[0]);
+          } else {
+            setSelectedClubAddress(null);
+          }
+        } catch (error) {
+          console.error("Error in reverse geocoding:", error);
+          setSelectedClubAddress(null);
+        }
+      })();
+    } else {
+      // Reset the address when no club is selected
+      setSelectedClubAddress(null);
+    }
+  }, [selectedClub]);
 
   return (
     <>
@@ -74,52 +141,75 @@ const Map = () => {
             userInterfaceStyle="dark"
             mapType="mutedStandard"
           >
-            <Marker
-              coordinate={{
-                latitude: location?.latitude || 0,
-                longitude: location?.longitude || 0,
-              }}
-              image={icons.marker}
-              onPress={() => setClubModalVisible(true)}
-              title="Club Name - Click to view more"
-            />
+            {/* Markers for Clubs */}
+            {clubs.map((club) => (
+              <Marker
+                key={club.club_id}
+                coordinate={{
+                  latitude: club.latitude,
+                  longitude: club.longitude,
+                }}
+                image={icons.marker}
+                onPress={() => {
+                  setSelectedClub(club);
+                  setClubModalVisible(true);
+                }}
+                title={`${club.club_name} - click for details`}
+              />
+            ))}
           </MapView>
         )}
       </View>
-      <Modal
-        isVisible={clubModalVisible}
-        onBackdropPress={() => setClubModalVisible(false)}
-      >
-        <View className="h-1/2 w-full bg-neutral-200 rounded-3xl p-5">
-          <ScrollView>
-            <Text className="w-full font-bold text-2xl text-center">
-              Club Name
-            </Text>
-            <View className="flex flex-col items-start justify-start mt-5">
-              <View className="flex flex-row items-center justify-start mb-2">
-                <Image source={icons.map} className="h-5 w-5 mr-2" />
-                <Text>Club Address</Text>
+      {/* Club Details Modal */}
+      {selectedClub && (
+        <Modal
+          isVisible={clubModalVisible}
+          onBackdropPress={() => {
+            setClubModalVisible(false);
+            setSelectedClub(null);
+          }}
+        >
+          <View className="h-1/2 w-full bg-neutral-200 rounded-3xl p-5">
+            <ScrollView>
+              <Text className="w-full font-bold text-2xl text-center">
+                {selectedClub.club_name}
+              </Text>
+              <View className="flex flex-col items-start justify-start mt-5">
+                <View className="flex flex-row items-center justify-start mb-2">
+                  <Image source={icons.map} className="h-5 w-5 mr-2" />
+                  <Text>
+                    {selectedClubAddress
+                      ? `Address: ${selectedClubAddress.street}, ${selectedClubAddress.city}`
+                      : "Fetching address..."}
+                  </Text>
+                </View>
+                <View className="flex flex-row items-center justify-start mb-2">
+                  <Image source={icons.calendar} className="h-5 w-5 mr-2" />
+                  <Text>
+                    {`Working days: ${selectedClub.working_days}` ||
+                      "Working Days"}
+                  </Text>
+                </View>
+                <View className="flex flex-row items-center justify-start">
+                  <Image source={icons.time} className="h-5 w-5 mr-2" />
+                  <Text>
+                    {`Working hours: ${selectedClub.default_working_hours}h` ||
+                      "Working Hours"}
+                  </Text>
+                </View>
               </View>
-              <View className="flex flex-row items-center justify-start mb-2">
-                <Image source={icons.calendar} className="h-5 w-5 mr-2" />
-                <Text>Club Days</Text>
+              <Text className="w-full font-bold text-2xl text-center mt-5">
+                Upcoming Events
+              </Text>
+              <View className="flex flex-col items-center justify-center mt-5 pb-5">
+                {events.map((event) => (
+                  <EventCard key={event.id} event={event} />
+                ))}
               </View>
-              <View className="flex flex-row items-center justify-start">
-                <Image source={icons.time} className="h-5 w-5 mr-2" />
-                <Text>Club Hours</Text>
-              </View>
-            </View>
-            <Text className="w-full font-bold text-2xl text-center mt-5">
-              Upcoming Events
-            </Text>
-            <View className="flex flex-col items-center justify-center mt-5 pb-5">
-              {events.map((event) => (
-                <EventCard key={event.id} event={event} />
-              ))}
-            </View>
-          </ScrollView>
-        </View>
-      </Modal>
+            </ScrollView>
+          </View>
+        </Modal>
+      )}
     </>
   );
 };

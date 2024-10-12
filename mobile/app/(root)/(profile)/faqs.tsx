@@ -19,9 +19,9 @@ const FAQScreen: React.FC = () => {
 
   const faqs = [
     {
-      question: "What is [App Name]?",
+      question: "What is RiConnect?",
       answer:
-        "[App Name] is a mobile app that helps users [insert app purpose].",
+        "RiConnect is a mobile app that helps users view, join and better enjoy local nightclub events.",
     },
     {
       question: "How do I reset my password?",
@@ -30,7 +30,7 @@ const FAQScreen: React.FC = () => {
     },
     {
       question: "How do I contact support?",
-      answer: "You can contact our support team at [support email].",
+      answer: "You can contact our support team at riconnect@support.com.",
     },
     // Add more FAQs as needed
   ];

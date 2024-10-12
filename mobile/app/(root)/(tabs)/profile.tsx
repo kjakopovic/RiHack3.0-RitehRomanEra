@@ -5,6 +5,7 @@ import { router, Href } from "expo-router";
 import Modal from "react-native-modal";
 
 import * as icons from "@/constants/icons";
+import * as images from "@/constants/images";
 
 const Profile = () => {
   const [infoModal, setInfoModal] = React.useState(false);
@@ -14,7 +15,12 @@ const Profile = () => {
       <ScrollView>
         <View className="flex flex-row items-center justify-between bg-neutral-200 rounded-xl border border-primary-0 shadow-sm shadow-gray-400 p-4 mt-10">
           <View className="flex flex-row items-center justify-start">
-            <View className="bg-secondary-200 rounded-full h-12 w-12" />
+            <View className="bg-secondary-200 rounded-full h-12 w-12">
+              <Image
+                source={images.profilePlace}
+                className="h-12 w-12 rounded-full"
+              />
+            </View>
             <View className="flex flex-col ml-2">
               <Text className="text-txt-100 text-2xl font-bold">User</Text>
               <Text className="text-txt-200 text-lg font-light">
@@ -45,22 +51,6 @@ const Profile = () => {
                 <Image source={icons.person} className="h-4 w-4" />
               </View>
               <Text className="text-txt-100 text-lg font-bold">Profile</Text>
-            </View>
-            <Text className="text-txt-100 text-lg font-bold">{">"}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => {
-              router.push("/preferences");
-            }}
-            className="flex flex-row items-center justify-between w-full py-4 border-b border-secondary-200"
-          >
-            <View className="flex flex-row items-center justify-start">
-              <View className="bg-neutral-100 items-center justify-center rounded-full h-8 w-8 mr-2">
-                <Image source={icons.settings} className="h-4 w-4" />
-              </View>
-              <Text className="text-txt-100 text-lg font-bold">
-                Preferences
-              </Text>
             </View>
             <Text className="text-txt-100 text-lg font-bold">{">"}</Text>
           </TouchableOpacity>
