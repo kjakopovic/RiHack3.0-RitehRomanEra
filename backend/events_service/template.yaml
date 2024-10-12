@@ -3,6 +3,22 @@ Transform: AWS::Serverless-2016-10-31
 Description: >
   events_service
 
+Parameters:
+  JwtSecretName:
+    Type: String
+    Description: Name of the secret in Secrets Manager that contains the JWT secret
+    Default: python-lambda-app/prod/jwt-secret
+
+  JwtSecretArn:
+    Type: String
+    Description: ARN for the secret in Secrets Manager that contains the JWT secret
+    Default: arn:aws:secretsmanager:eu-central-1:333855566543:secret:python-lambda-app/prod/jwt-secret-jN0u8x
+
+  SecretsRegionName:
+    Type: String
+    Description: Region name where the secrets are stored
+    Default: eu-central-1
+
 # Global Settings
 Globals:
   Api:
@@ -79,6 +95,8 @@ Resources:
           GIVEAWAY_TABLE_NAME: !Ref GiveawayTable
           CLUBS_TABLE_NAME: !ImportValue club-service-ClubsTableName
           USERS_TABLE_NAME: !ImportValue user-service-UsersTableName
+          JWT_SECRET_NAME: !Ref JwtSecretName
+          SECRETS_REGION_NAME: !Ref SecretsRegionName
       Architectures:
         - x86_64
       Policies:
@@ -104,6 +122,11 @@ Resources:
               Action:
                 - "dynamodb:*"
               Resource: !ImportValue user-service-UsersTableArn
+            # Secrets Manager for jwt secret permissions
+            - Effect: Allow
+              Action:
+                - secretsmanager:GetSecretValue
+              Resource: !Ref JwtSecretArn
       Events:
         RegisterEventEndpoint:
           Type: HttpApi 
