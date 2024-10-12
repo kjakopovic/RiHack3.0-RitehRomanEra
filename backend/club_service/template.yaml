@@ -14,6 +14,11 @@ Parameters:
     Description: ARN for the secret in Secrets Manager that contains the JWT secret
     Default: arn:aws:secretsmanager:eu-central-1:333855566543:secret:python-lambda-app/prod/jwt-secret-jN0u8x
 
+  SecretsRegionName:
+    Type: String
+    Description: Region name where the secrets are stored
+    Default: eu-central-1
+
 # Global Settings
 Globals:
   Api:
