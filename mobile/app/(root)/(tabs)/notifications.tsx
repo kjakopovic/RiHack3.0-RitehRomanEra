@@ -1,82 +1,119 @@
-import React from "react";
+// Notifications.tsx
+
+import React, { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ScrollView, View, Text } from "react-native";
+import { ScrollView, View, Text, TouchableOpacity, Image } from "react-native";
 import { liveEvents, pastEvents, upcomingEvents } from "@/constants/events";
 import EventCard from "@/components/EventCard"; // Adjust the import path as needed
+import CameraComponent from "@/components/CameraComponent"; // Import the CameraComponent
+import * as icons from "@/constants/icons";
 
 const Notifications = () => {
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const [currentEvent, setCurrentEvent] = useState<any>(null);
+  const [eventPhotos, setEventPhotos] = useState<{ [key: string]: string }>({});
+
+  // Function to handle camera icon press
+  const handleCameraPress = (event: any) => {
+    setCurrentEvent(event);
+    setIsCameraOpen(true);
+  };
+
+  // Function to save the picture
+  const savePhoto = (photo: any) => {
+    if (photo && currentEvent) {
+      setEventPhotos((prevPhotos) => ({
+        ...prevPhotos,
+        [currentEvent.id]: photo.base64,
+      }));
+    }
+  };
+
+  // Function to close the camera view
+  const closeCamera = () => {
+    setIsCameraOpen(false);
+    setCurrentEvent(null);
+  };
+
   return (
     <SafeAreaView className="bg-neutral-100 flex-1">
-      <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
-        {/* Header */}
-        <View className="px-6 pt-6 pb-2">
-          <Text className="text-3xl font-bold text-primary-0">My Events</Text>
-        </View>
-
-        {/* Live Events Section */}
-        {liveEvents.length > 0 && (
-          <View className="mb-6">
-            <Text className="text-xl font-semibold text-txt-100 px-6 mb-4">
-              Live Events
-            </Text>
-            {liveEvents.map((event) => (
-              <View key={event.id} className="items-center mb-4">
-                <EventCard event={event} />
-              </View>
-            ))}
+      {isCameraOpen ? (
+        <CameraComponent onSavePhoto={savePhoto} onCloseCamera={closeCamera} />
+      ) : (
+        <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
+          {/* Header */}
+          <View className="px-6 pt-6 pb-2">
+            <Text className="text-3xl font-bold text-primary-0">My Events</Text>
           </View>
-        )}
 
-        {/* Divider */}
-        {liveEvents.length > 0 &&
-          (upcomingEvents.length > 0 || pastEvents.length > 0) && (
+          {/* Live Events Section */}
+          {liveEvents.length > 0 && (
+            <View className="mb-6">
+              <Text className="text-xl font-semibold text-txt-100 px-6 mb-4">
+                Live Events
+              </Text>
+              {liveEvents.map((event) => (
+                <View key={event.id} className="items-center mb-4">
+                  <EventCard
+                    event={event}
+                    onCameraPress={() => handleCameraPress(event)}
+                  />
+                </View>
+              ))}
+            </View>
+          )}
+
+          {/* Divider */}
+          {liveEvents.length > 0 &&
+            (upcomingEvents.length > 0 || pastEvents.length > 0) && (
+              <View className="border-t border-neutral-300 mx-6 my-4" />
+            )}
+
+          {/* Upcoming Events Section */}
+          {upcomingEvents.length > 0 && (
+            <View className="mb-6">
+              <Text className="text-xl font-semibold text-txt-100 px-6 mb-4">
+                Upcoming Events
+              </Text>
+              {upcomingEvents.map((event) => (
+                <View key={event.id} className="items-center mb-4">
+                  <EventCard event={event} />
+                </View>
+              ))}
+            </View>
+          )}
+
+          {/* Divider */}
+          {upcomingEvents.length > 0 && pastEvents.length > 0 && (
             <View className="border-t border-neutral-300 mx-6 my-4" />
           )}
 
-        {/* Upcoming Events Section */}
-        {upcomingEvents.length > 0 && (
-          <View className="mb-6">
-            <Text className="text-xl font-semibold text-txt-100 px-6 mb-4">
-              Upcoming Events
-            </Text>
-            {upcomingEvents.map((event) => (
-              <View key={event.id} className="items-center mb-4">
-                <EventCard event={event} />
-              </View>
-            ))}
-          </View>
-        )}
-
-        {/* Divider */}
-        {upcomingEvents.length > 0 && pastEvents.length > 0 && (
-          <View className="border-t border-neutral-300 mx-6 my-4" />
-        )}
-
-        {/* Past Events Section */}
-        {pastEvents.length > 0 && (
-          <View className="mb-6">
-            <Text className="text-xl font-semibold text-txt-100 px-6 mb-4">
-              Past Events
-            </Text>
-            {pastEvents.map((event) => (
-              <View key={event.id} className="items-center mb-4">
-                <EventCard event={event} />
-              </View>
-            ))}
-          </View>
-        )}
-
-        {/* No Events Message */}
-        {liveEvents.length === 0 &&
-          upcomingEvents.length === 0 &&
-          pastEvents.length === 0 && (
-            <View className="px-6 mt-10">
-              <Text className="text-base text-txt-200">
-                No notifications available at the moment.
+          {/* Past Events Section */}
+          {pastEvents.length > 0 && (
+            <View className="mb-6">
+              <Text className="text-xl font-semibold text-txt-100 px-6 mb-4">
+                Past Events
               </Text>
+              {pastEvents.map((event) => (
+                <View key={event.id} className="items-center mb-4">
+                  <EventCard event={event} />
+                </View>
+              ))}
             </View>
           )}
-      </ScrollView>
+
+          {/* No Events Message */}
+          {liveEvents.length === 0 &&
+            upcomingEvents.length === 0 &&
+            pastEvents.length === 0 && (
+              <View className="px-6 mt-10">
+                <Text className="text-base text-txt-200">
+                  No notifications available at the moment.
+                </Text>
+              </View>
+            )}
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 };

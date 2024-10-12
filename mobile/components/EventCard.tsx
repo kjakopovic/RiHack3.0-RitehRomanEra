@@ -19,11 +19,12 @@ interface EventCardProps {
     date: string;
     time: string;
     location: string;
-    tags: string[]; // Added tags property
+    tags: string[];
   };
+  onCameraPress?: () => void; // Add this line
 }
 
-const EventCard: React.FC<EventCardProps> = ({ event }) => {
+const EventCard: React.FC<EventCardProps> = ({ event, onCameraPress }) => {
   const { id, name, description, date, time, location, tags } = event;
 
   // Access the global state from the zustand store
@@ -141,8 +142,13 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
         {/* Action Buttons */}
         <View className="flex flex-row w-full items-center justify-end gap-x-2 mt-4">
           {/* Share Button */}
+          {onCameraPress && (
+            <TouchableOpacity onPress={onCameraPress} className="mt-1">
+              <Image source={icons.camera} className="h-7 w-7" />
+            </TouchableOpacity>
+          )}
           <TouchableOpacity onPress={shareEvent}>
-            <Image source={icons.share} className="h-6 w-6" />
+            <Image source={icons.share} className="h-7 w-7" />
           </TouchableOpacity>
           {/* Join/Unjoin Button */}
           <TouchableOpacity
