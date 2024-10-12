@@ -86,7 +86,12 @@ const TabsLayout = () => {
             title: "Notifications",
             headerShown: false,
             tabBarIcon: ({ focused }) => (
-              <TabIcon focused={focused} icon={icons.bell} title="Activity" />
+              <TabIcon
+                focused={focused}
+                icon={icons.calendar}
+                iconStyles="w-6 h-6"
+                title="Events"
+              />
             ),
           }}
         />
