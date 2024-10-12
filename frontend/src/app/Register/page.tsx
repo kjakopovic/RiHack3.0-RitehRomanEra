@@ -16,11 +16,12 @@ const StepTwoSchema = Yup.object().shape({
 })
 
 const StepThreeSchema = Yup.object().shape({
-    clubTags: Yup.string().required('Required'),
+    workingHours: Yup.string().required('Required'),
+    workingDays: Yup.string().required('Required'),
 })
-const StepFourSchema = Yup.object().shape({
-    workingTime: Yup.string().required('Required'),
-})
+
+
+
 
 const initialValues = {
     email: '',
@@ -28,8 +29,8 @@ const initialValues = {
     confirmPassword: '',
     location: '',
     clubName: '',
-    clubTags: '',
     workingHours: '',
+    workingDays: '',
 }
 const StepOne = () => (
     <div>
@@ -104,7 +105,7 @@ const StepTwo = () => (
             className="text-red-500 text-sm"
         />
         <label
-            htmlFor="clubName"
+            htmlFor="location"
             className="block text-sm font-medium text-gray-700"
         >
             Location
@@ -125,23 +126,28 @@ const StepTwo = () => (
 const StepThree = () => (
     <div>
         <label
-            htmlFor="clubTags"
-            className="block text-sm font-medium text-gray-700"
-        >
-            Club Tags
-        </label>
-        <Field
-            type="text"
-            name="clubTags"
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-        />
-        <ErrorMessage
-            name="clubTags"
-            component="div"
-            className="text-red-500 text-sm"
-        />
+                htmlFor="workingDays"
+                className="block text-sm font-medium text-gray-700"
+            >
+                Working Days
+            </label>
+            <Field
+                as="select"
+                name="workingDays"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            >
+                <option value="" disabled>Select working days</option>
+                <option value="whole_week">Whole Week</option>
+                <option value="weekend">Weekend</option>
+                <option value="week_days">Week Days</option>
+            </Field>
+            <ErrorMessage
+                name="workingDays"
+                component="div"
+                className="text-red-500 text-sm"
+            />
         <label
-            htmlFor="clubTags"
+            htmlFor="workingHours"
             className="block text-sm font-medium text-gray-700"
         >
             Working hours
@@ -238,6 +244,7 @@ export default function RegisterPage() {
                                 {step > 1 && (
                                     <Button
                                         variant="outline"
+                                        type='button'
                                         onClick={handleBack}
                                     >
                                         Back
@@ -245,6 +252,7 @@ export default function RegisterPage() {
                                 )}
                                 {step < 3 ? (
                                     <Button
+                                        type='button'
                                         variant="outline"
                                         onClick={handleNext}
                                     >
@@ -254,6 +262,7 @@ export default function RegisterPage() {
                                     <Button
                                         variant="outline"
                                         disabled={isSubmitting}
+                                        type='submit'
                                     >
                                         Register
                                     </Button>
