@@ -299,7 +299,7 @@ Resources:
       BuildMethod: makefile
     Properties:
       CodeUri: ./
-      Handler: leave_event_lambda.lambda_handler
+      Handler: giveaway_join_lambda.lambda_handler
       Runtime: python3.12
       Environment:
         Variables:
