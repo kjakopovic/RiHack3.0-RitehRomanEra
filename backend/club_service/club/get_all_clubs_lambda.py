@@ -5,20 +5,11 @@ import logging
 from decimal import Decimal
 from boto3.dynamodb.conditions import Attr
 
-import backend.common.common as common_handler
-
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 def lambda_handler(event, context):
     try:
-        error_response, _ = common_handler.check_is_user_authenticated_and_fetch_email_from_jwt(event)
-
-        logger.info(f'GET ALL CLUBS - User is logged in')
-        
-        if error_response:
-            return error_response
-
         event = event.get('queryStringParameters', {})
 
         longitude = event.get('longitude', None)
@@ -79,7 +70,12 @@ def lambda_handler(event, context):
                 club['latitude'] = float(club['latitude'])
                 club['longitude'] = float(club['longitude'])
 
-            logger.info(f'REGISTER CLUB - Found clubs: {clubs}')
+            filtered_clubs = [
+                {key: value for key, value in club.items() if key not in ['password', 'refresh_token']}
+                for club in clubs
+            ]
+
+            logger.info(f'REGISTER CLUB - Found clubs: {filtered_clubs}')
         except Exception as e:
             logger.error(f'REGISTER CLUB - Unable to read item: {str(e)}')
 
@@ -100,7 +96,7 @@ def lambda_handler(event, context):
             },
             'body': json.dumps({
                 'message': 'This are clubs in your range!',
-                'clubs': clubs.get('Items', [])
+                'clubs': filtered_clubs
             })
         }
     except Exception as e:
