@@ -3,6 +3,7 @@ import boto3
 import os
 import logging
 from boto3.dynamodb.conditions import Key
+from boto3.dynamodb.conditions import Attr
 
 import backend.common.common as common_handler
 
@@ -44,32 +45,13 @@ def lambda_handler(event, context):
     min_longitude = longitude - 0.02
     max_longitude = longitude + 0.02
 
-    merged_results = []
-
     try:
-        latitude_items = clubs_table.query(
-            IndexName='LatIndex',
-            KeyConditionExpression=Key('latitude').between(min_latitude, max_latitude)
+        clubs = clubs_table.scan(
+            FilterExpression=Attr('latitude').between(min_latitude, max_latitude) &
+                            Attr('longitude').between(min_longitude, max_longitude)
         )
 
-        longitude_items = clubs_table.query(
-            IndexName='LongIndex',
-            KeyConditionExpression=Key('longitude').between(min_longitude, max_longitude)
-        )
-
-        for latitude_item in latitude_items:
-            if (
-                latitude_item['longitude'] >= min_longitude and
-                latitude_item['longitude'] <= max_longitude
-            ):
-                merged_results.append(latitude_item)
-            
-        for longitude_item in longitude_items:
-            if (
-                longitude_item['latitude'] >= min_latitude and 
-                longitude_item['latitude'] <= max_latitude
-            ):
-                merged_results.append(longitude_item)
+        logger.info(f'REGISTER CLUB - Found clubs: {clubs}')
     except Exception as e:
         logger.error(f'REGISTER CLUB - Unable to read item: {str(e)}')
 
@@ -90,6 +72,6 @@ def lambda_handler(event, context):
         },
         'body': json.dumps({
             'message': 'This are clubs in your range!',
-            'clubs': merged_results
+            'clubs': clubs
         })
     }

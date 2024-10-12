@@ -56,25 +56,6 @@ Resources:
       ProvisionedThroughput:
         ReadCapacityUnits: 5
         WriteCapacityUnits: 5
-      GlobalSecondaryIndexes:
-        - IndexName: LatIndex
-          KeySchema:
-            - AttributeName: latitude
-              KeyType: HASH
-          Projection:
-            ProjectionType: ALL
-          ProvisionedThroughput:
-            ReadCapacityUnits: 5
-            WriteCapacityUnits: 5
-        - IndexName: LongIndex
-          KeySchema:
-            - AttributeName: longitude
-              KeyType: HASH
-          Projection:
-            ProjectionType: ALL
-          ProvisionedThroughput:
-            ReadCapacityUnits: 5
-            WriteCapacityUnits: 5
 
   # Lambda Functions
 
