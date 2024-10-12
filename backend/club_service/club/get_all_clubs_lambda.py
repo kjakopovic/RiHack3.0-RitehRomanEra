@@ -62,9 +62,13 @@ def lambda_handler(event, context):
             clubs = clubs_table.scan()
             clubs_items = clubs.get('Items', [])
 
+            logger.info(f'GET ALL CLUBS - Found clubs: {clubs_items}')
+
             filtered_clubs = []
 
             for club in clubs_items:
+                logger.info(f'GET ALL CLUBS - longitude {min_longitude <= float(club['longitude']) <= max_longitude}')
+                logger.info(f'GET ALL CLUBS - latitude {min_latitude <= float(club['latitude']) <= max_latitude}')
                 if (
                     min_longitude <= float(club['longitude']) <= max_longitude and
                     min_latitude <= float(club['latitude']) <= max_latitude
