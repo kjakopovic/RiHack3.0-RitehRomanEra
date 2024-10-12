@@ -37,6 +37,20 @@ Resources:
         ReadCapacityUnits: 5
         WriteCapacityUnits: 5
 
+  GiveawayTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: giveaways
+      AttributeDefinitions:
+        - AttributeName: giveaway_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: giveaway_id
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+
   # Lambda Functions
 
   RegisterEventFunction:
