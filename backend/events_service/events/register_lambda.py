@@ -3,21 +3,23 @@ import logging
 import uuid
 import boto3
 import os
-from decimal import Decimal
+import backend.common.common as common_handler
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-#TODO: uzmi longitude i latitude iz cluba
 def lambda_handler(event, context):
     try:
+        error_response, email = common_handler.check_is_user_authenticated_and_fetch_email_from_jwt(event)
+    
+        if error_response:
+            return error_response
         event = json.loads(event.get('body')) if 'body' in event else event
 
         logger.info(f'REGISTER EVENT - Checking if every required attribute is found: {event}')
 
         # Define the required attributes and their types
         required_attributes = {
-            'club_id': str,
             'title': str,
             'description': str,
             'startingAt': str,
@@ -98,14 +100,14 @@ def lambda_handler(event, context):
 
         club_info = clubs_table.get_item(
             Key={
-                'club_id': event['club_id']
+                'club_id': email
             }
         )
 
         # Prepare only the required attributes for saving
         item_to_save = {
             'event_id': event_id,
-            'club_id': event['club_id'],
+            'club_id': email,
             'title': event['title'],
             'description': event['description'],
             'startingAt': event['startingAt'],
