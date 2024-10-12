@@ -67,8 +67,8 @@ def lambda_handler(event, context):
             filtered_clubs = []
 
             for club in clubs_items:
-                logger.info(f'GET ALL CLUBS - longitude {min_longitude <= float(club['longitude']) <= max_longitude}')
-                logger.info(f'GET ALL CLUBS - latitude {min_latitude <= float(club['latitude']) <= max_latitude}')
+                logger.info(f'GET ALL CLUBS - longitude {float(min_longitude) <= float(club['longitude']) <= float(max_longitude)}')
+                logger.info(f'GET ALL CLUBS - latitude {float(min_latitude) <= float(club['latitude']) <= float(max_latitude)}')
                 if (
                     min_longitude <= float(club['longitude']) <= max_longitude and
                     min_latitude <= float(club['latitude']) <= max_latitude
