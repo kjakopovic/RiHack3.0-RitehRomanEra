@@ -139,7 +139,7 @@ def generate_refresh_token(table, user_email, is_clubs_table=False):
     except Exception as e:
         return None
     
-def check_is_refresh_token_valid(refresh_token):
+def check_is_refresh_token_valid(refresh_token, is_clubs_table=False):
     try:
         logger.info(f'SERVICE - Getting secret value.')
 
@@ -156,21 +156,39 @@ def check_is_refresh_token_valid(refresh_token):
         logger.info('SERVICE - Getting database client')
 
         dynamodb = boto3.resource('dynamodb')
-        users_table = dynamodb.Table(os.getenv('USERS_TABLE_NAME'))
 
-        logger.info('SERVICE - Getting user from the database')
+        if is_clubs_table:
+            clubs_table = dynamodb.Table(os.getenv('CLUBS_TABLE_NAME'))
 
-        user_table_item = users_table.get_item(
-            Key={
-                'email': decoded_token['email']
-            }
-        )
-        
-        return (
-            user_table_item.get('Item') and 
-            user_table_item.get('Item').get('refresh_token') and
-            user_table_item.get('Item').get('refresh_token') == refresh_token
-        )
+            logger.info('SERVICE - Getting user from the database')
+
+            club_table_item = clubs_table.get_item(
+                Key={
+                    'email': decoded_token['email']
+                }
+            )
+            
+            return (
+                club_table_item.get('Item') and 
+                club_table_item.get('Item').get('refresh_token') and
+                club_table_item.get('Item').get('refresh_token') == refresh_token
+            )
+        else:
+            users_table = dynamodb.Table(os.getenv('USERS_TABLE_NAME'))
+
+            logger.info('SERVICE - Getting user from the database')
+
+            user_table_item = users_table.get_item(
+                Key={
+                    'email': decoded_token['email']
+                }
+            )
+            
+            return (
+                user_table_item.get('Item') and 
+                user_table_item.get('Item').get('refresh_token') and
+                user_table_item.get('Item').get('refresh_token') == refresh_token
+            )
     except jwt.ExpiredSignatureError:
         logger.error(f'SERVICE - Refresh token has expired.')
 

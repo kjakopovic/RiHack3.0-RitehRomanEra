@@ -69,7 +69,7 @@ def lambda_handler(event, context):
         }
     
     # Check if the CLUB REFRESH TOKEN is correct
-    if not common_handler.check_is_refresh_token_valid(refresh_token):
+    if not common_handler.check_is_refresh_token_valid(refresh_token, is_clubs_table=True):
         return {
             'statusCode': 400,
             'headers': {
