@@ -1,8 +1,8 @@
 version = 0.1
 [default.deploy.parameters]
-stack_name = "user-service"
+stack_name = "events-service"
 resolve_s3 = true
-s3_prefix = "user-service"
+s3_prefix = "events-service"
 region = "eu-central-1"
 capabilities = "CAPABILITY_IAM"
 image_repositories = []
