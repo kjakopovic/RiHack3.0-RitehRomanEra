@@ -81,10 +81,6 @@ def lambda_handler(event, context):
 
                 filtered_clubs.append(club_response)
 
-            logger.info(f'GET ALL CLUBS - Converting to JSON: {clubs_items}')
-
-            clubs_items = json.dumps(clubs_items)
-
             logger.info(f'GET ALL CLUBS - Found clubs: {filtered_clubs}')
         except Exception as e:
             logger.error(f'GET ALL CLUBS - Unable to read item: {str(e)}')
