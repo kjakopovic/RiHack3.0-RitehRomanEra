@@ -33,7 +33,7 @@ def lambda_handler(event, context):
     dynamodb = boto3.resource('dynamodb')
     clubs_table = dynamodb.Table(os.getenv('CLUBS_TABLE_NAME'))
 
-    logger.info(f' CLUB LOGIN - Checking if user exists in the database.')
+    logger.info(f'CLUB LOGIN - Checking if user exists in the database.')
 
     # Find user in the table by email
     try:
@@ -66,25 +66,36 @@ def lambda_handler(event, context):
         }
 
     # Verify password (assuming the password is stored in hashed form)
-    club = response['Item']
+    club = response.get('Item')
 
-    if club:
-        stored_password = club.get('password')
+    if not club:
+        return {
+            'statusCode': 500,
+            'headers': {
+                'Content-Type': 'application/json'
+            },
+            'body': json.dumps({
+                'message': 'Unable to generate tokens. Please contact support.'
+            })
+        }
+        
+    stored_password = club.get('password')
     
-        if not bcrypt.checkpw(password.encode(), stored_password.encode()):
-            return {
-                'statusCode': 400,
-                'headers': {
-                    'Content-Type': 'application/json'
-                },
-                'body': json.dumps({
-                    'message': 'Incorrect email or password.'
-                })
-            }
-    
+    if not bcrypt.checkpw(password.encode(), stored_password.encode()):
+        return {
+            'statusCode': 400,
+            'headers': {
+                'Content-Type': 'application/json'
+            },
+            'body': json.dumps({
+                'message': 'Incorrect email or password.'
+            })
+        }
     # Generate JWT and refresh tokens
     access_token = common_handler.generate_access_token(email)
     refresh_token = common_handler.generate_refresh_token(clubs_table, email)
+
+    logger.info(f'LOGIN - Generated tokens: {access_token}, {refresh_token}')
 
     if not access_token or not refresh_token:
         return {
