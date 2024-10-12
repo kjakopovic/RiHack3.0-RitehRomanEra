@@ -1,9 +1,10 @@
 import json
 import boto3
 import os
+import bcrypt
 import logging
 
-import backend.common.common as common_handler  # JWT handling and six-digit code validation
+import backend.common.common as common_handler
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -15,7 +16,7 @@ def lambda_handler(event, context):
 
     try:
         email = event['email']
-        password = event['password']  # Here we assume login with email and password
+        password = event['password']
     except Exception as e:
         return {
             'statusCode': 400,
@@ -66,18 +67,20 @@ def lambda_handler(event, context):
 
     # Verify password (assuming the password is stored in hashed form)
     club = response['Item']
-    stored_password = club.get('password')
+
+    if club:
+        stored_password = club.get('password')
     
-    if not common_handler.check_password(password, stored_password):  # Assume common_handler has password check
-        return {
-            'statusCode': 400,
-            'headers': {
-                'Content-Type': 'application/json'
-            },
-            'body': json.dumps({
-                'message': 'Incorrect password. Please try again.'
-            })
-        }
+        if not bcrypt.checkpw(password.encode(), stored_password.encode()):
+            return {
+                'statusCode': 400,
+                'headers': {
+                    'Content-Type': 'application/json'
+                },
+                'body': json.dumps({
+                    'message': 'Incorrect email or password.'
+                })
+            }
     
     # Generate JWT and refresh tokens
     access_token = common_handler.generate_access_token(email)

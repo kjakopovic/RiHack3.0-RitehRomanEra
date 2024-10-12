@@ -98,7 +98,7 @@ def generate_access_token(user_email):
     except Exception as e:
         return None
     
-def generate_refresh_token(users_table, user_email):
+def generate_refresh_token(table, user_email, is_clubs_table=False):
     try:
         logger.info(f'SERVICE - Getting secret value.')
 
@@ -115,15 +115,25 @@ def generate_refresh_token(users_table, user_email):
 
         logger.info(f'SERVICE - Saving refresh token to the database.')
 
-        users_table.update_item(
-            Key={
-                'email': user_email
-            },
-            UpdateExpression='SET refresh_token = :refresh_token',
-            ExpressionAttributeValues={
-                ':refresh_token': refresh_token
-            }
-        )
+        if is_clubs_table:
+            table.update_item(
+                Key={
+                    'club_id': user_email
+                },
+                UpdateExpression='SET refresh_token = :refresh_token',
+                ExpressionAttributeValues={
+                    ':refresh_token': refresh_token
+                })
+        else:
+            table.update_item(
+                Key={
+                    'email': user_email
+                },
+                UpdateExpression='SET refresh_token = :refresh_token',
+                ExpressionAttributeValues={
+                    ':refresh_token': refresh_token
+                }
+            )
 
         return refresh_token
     except Exception as e:
