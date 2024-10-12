@@ -5,8 +5,6 @@ import os
 import logging
 from decimal import Decimal
 
-import backend.common.common as common_handler
-
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 

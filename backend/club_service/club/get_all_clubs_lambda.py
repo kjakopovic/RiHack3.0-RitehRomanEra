@@ -2,7 +2,7 @@ import json
 import boto3
 import os
 import logging
-from boto3.dynamodb.conditions import Key
+from decimal import Decimal
 from boto3.dynamodb.conditions import Attr
 
 import backend.common.common as common_handler
@@ -32,6 +32,9 @@ def lambda_handler(event, context):
             })
         }
     
+    longitude = Decimal(longitude)
+    latitude = Decimal(latitude)
+    
     logger.info(f'REGISTER CLUB - Getting table for clubs.')
 
     dynamodb = boto3.resource('dynamodb')
@@ -40,10 +43,10 @@ def lambda_handler(event, context):
     logger.info(f'REGISTER CLUB - Checking if club already exists.')
 
     # Getting clubs in the area
-    min_latitude = latitude - 0.02
-    max_latitude = latitude + 0.02
-    min_longitude = longitude - 0.02
-    max_longitude = longitude + 0.02
+    min_latitude = Decimal(latitude - 0.02)
+    max_latitude = Decimal(latitude + 0.02)
+    min_longitude = Decimal(longitude - 0.02)
+    max_longitude = Decimal(longitude + 0.02)
 
     try:
         clubs = clubs_table.scan(
