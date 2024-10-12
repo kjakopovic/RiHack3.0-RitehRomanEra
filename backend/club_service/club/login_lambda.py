@@ -93,7 +93,7 @@ def lambda_handler(event, context):
         }
     # Generate JWT and refresh tokens
     access_token = common_handler.generate_access_token(email)
-    refresh_token = common_handler.generate_refresh_token(clubs_table, email)
+    refresh_token = common_handler.generate_refresh_token(clubs_table, email, is_clubs_table=True)
 
     logger.info(f'LOGIN - Generated tokens: {access_token}, {refresh_token}')
 
