@@ -47,11 +47,12 @@ def lambda_handler(event, context):
     clubs_table = dynamodb.Table(os.getenv('CLUBS_TABLE_NAME'))
 
     try:
+        range = Decimal(0.02)
         # Getting clubs in the area
-        min_latitude = latitude - 0.02
-        max_latitude = latitude + 0.02
-        min_longitude = longitude - 0.02
-        max_longitude = longitude + 0.02
+        min_latitude = latitude - range
+        max_latitude = latitude + range
+        min_longitude = longitude - range
+        max_longitude = longitude + range
     except Exception as e:
         logger.error(f'GET ALL CLUBS - Unable to calculate range: {str(e)}')
 
