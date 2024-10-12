@@ -164,7 +164,7 @@ def check_is_refresh_token_valid(refresh_token, is_clubs_table=False):
 
             club_table_item = clubs_table.get_item(
                 Key={
-                    'email': decoded_token['email']
+                    'club_id': decoded_token['email']
                 }
             )
             
