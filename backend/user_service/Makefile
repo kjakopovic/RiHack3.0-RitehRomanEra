@@ -1,5 +1,5 @@
 SERVICE=user_service
-HOME_PATH=~/work/RiHack-Template/RiHack-Template
+HOME_PATH=~/work/RiHack3.0-RitehRomanEra/RiHack3.0-RitehRomanEra
 COMMON_CODE_PATH=$(HOME_PATH)/backend/common
 
 build:
