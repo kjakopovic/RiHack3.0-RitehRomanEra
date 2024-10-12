@@ -87,26 +87,17 @@ Resources:
             # Events table permissions
             - Effect: Allow
               Action:
-                - "dynamodb:PutItem"
-                - "dynamodb:DeleteItem"
-                - "dynamodb:GetItem"
-                - "dynamodb:UpdateItem"
+                - "dynamodb:*"
               Resource: !GetAtt EventsTable.Arn
             # Clubs table permissions
             - Effect: Allow
               Action:
-                - "dynamodb:PutItem"
-                - "dynamodb:DeleteItem"
-                - "dynamodb:GetItem"
-                - "dynamodb:UpdateItem"
+                - "dynamodb:*"
               Resource: !ImportValue club-service-ClubsTableArn
             # Users table permissions
             - Effect: Allow
               Action:
-                - "dynamodb:PutItem"
-                - "dynamodb:DeleteItem"
-                - "dynamodb:GetItem"
-                - "dynamodb:UpdateItem"
+                - "dynamodb:*"
               Resource: !ImportValue user-service-UsersTableArn
       Events:
         RegisterEventEndpoint:
