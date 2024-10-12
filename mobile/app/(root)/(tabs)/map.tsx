@@ -178,7 +178,11 @@ const Map = () => {
               <View className="flex flex-col items-start justify-start mt-5">
                 <View className="flex flex-row items-center justify-start mb-2">
                   <Image source={icons.map} className="h-5 w-5 mr-2" />
-                  <Text>
+                  <Text
+                    numberOfLines={2}
+                    ellipsizeMode="tail"
+                    className="w-3/4"
+                  >
                     {selectedClubAddress
                       ? `Address: ${selectedClubAddress.street}, ${selectedClubAddress.city}`
                       : "Fetching address..."}
