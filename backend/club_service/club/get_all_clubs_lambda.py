@@ -73,6 +73,12 @@ def lambda_handler(event, context):
                                 Attr('longitude').between(min_longitude, max_longitude)
             )
 
+            clubs_items = clubs.get('Items', [])
+
+            for club in clubs_items:
+                club['latitude'] = float(club['latitude'])
+                club['longitude'] = float(club['longitude'])
+
             logger.info(f'REGISTER CLUB - Found clubs: {clubs}')
         except Exception as e:
             logger.error(f'REGISTER CLUB - Unable to read item: {str(e)}')
@@ -94,7 +100,7 @@ def lambda_handler(event, context):
             },
             'body': json.dumps({
                 'message': 'This are clubs in your range!',
-                'clubs': clubs
+                'clubs': clubs.get('Items', [])
             })
         }
     except Exception as e:
