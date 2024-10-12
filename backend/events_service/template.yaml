@@ -135,6 +135,95 @@ Resources:
             Method: POST
             ApiId: !Ref EventsServiceApi
 
+  JoinEventFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      CodeUri: ./
+      Handler: join_event_lambda.lambda_handler  # Assuming your Lambda code is in join_lambda.py
+      Runtime: python3.12
+      Environment:
+        Variables:
+          EVENTS_TABLE_NAME: !Ref EventsTable
+          USERS_TABLE_NAME: !ImportValue user-service-UsersTableName
+          JWT_SECRET_NAME: !Ref JwtSecretName
+          SECRETS_REGION_NAME: !Ref SecretsRegionName
+      Architectures:
+        - x86_64
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            # Events table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:GetItem"
+                - "dynamodb:UpdateItem"
+              Resource: !GetAtt EventsTable.Arn
+            # Users table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:GetItem"
+                - "dynamodb:UpdateItem"
+              Resource: !ImportValue user-service-UsersTableArn
+            # Secrets Manager for JWT secret permissions
+            - Effect: Allow
+              Action:
+                - secretsmanager:GetSecretValue
+              Resource: !Ref JwtSecretArn
+      Events:
+        JoinEventEndpoint:
+          Type: HttpApi
+          Properties:
+            Path: /event/join
+            Method: POST
+            ApiId: !Ref EventsServiceApi
+
+  LeaveEventFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      CodeUri: ./
+      Handler: leave_event_lambda.lambda_handler
+      Runtime: python3.12
+      Environment:
+        Variables:
+          EVENTS_TABLE_NAME: !Ref EventsTable
+          USERS_TABLE_NAME: !ImportValue user-service-UsersTableName
+          JWT_SECRET_NAME: !Ref JwtSecretName
+          SECRETS_REGION_NAME: !Ref SecretsRegionName
+      Architectures:
+        - x86_64
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            # Events table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:GetItem"
+                - "dynamodb:UpdateItem"
+              Resource: !GetAtt EventsTable.Arn
+            # Users table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:GetItem"
+                - "dynamodb:UpdateItem"
+              Resource: !ImportValue user-service-UsersTableArn
+            # Secrets Manager for JWT secret permissions
+            - Effect: Allow
+              Action:
+                - secretsmanager:GetSecretValue
+              Resource: !Ref JwtSecretArn
+      Events:
+        LeaveEventEndpoint:
+          Type: HttpApi
+          Properties:
+            Path: /event/leave
+            Method: POST
+            ApiId: !Ref EventsServiceApi
+
+
   GetRandomGiveawayWinnerFunction:
     Type: AWS::Serverless::Function
     Metadata:
