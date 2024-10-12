@@ -34,6 +34,20 @@ def lambda_handler(event, context):
                     'message': 'We could not find your account. Please try again or contact support.'
                 })
             }
+        
+        users = response['Items']
+        sorted_users = sorted(users, key=lambda user: user.get('points', 0), reverse=True)
+
+        filtered_users = []
+
+        for user in sorted_users:
+            filtered_users.append({
+                'email': user['email'],
+                'points': user['points'],
+                'first_name': user['first_name'],
+                'last_name': user['last_name']
+            })
+
     except Exception as e:
         logger.error(f"GET USERS PRIVATE INFO - Couldn't get private info: {str(e)}")
 
@@ -53,9 +67,6 @@ def lambda_handler(event, context):
             'Content-Type': 'application/json'
         },
         'body': json.dumps({
-            'info': {
-                'age': int(response['Item']['age']) if response.get('Item').get('age') else None,
-                'phone_number': response['Item']['phone_number'] if response.get('Item').get('phone_number') else None,
-            }
+            'users': filtered_users
         })
     }
