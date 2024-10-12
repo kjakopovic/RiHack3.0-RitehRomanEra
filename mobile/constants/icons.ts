@@ -21,6 +21,7 @@ import map from "../assets/icons/map.png";
 import marker from "../assets/icons/marker.png";
 import dollar from "../assets/icons/dollar.png";
 import time from "../assets/icons/time.png";
+import star from "../assets/icons/star.png";
 
 export {
   home,
@@ -46,4 +47,5 @@ export {
   marker,
   dollar,
   time,
+  star,
 };
