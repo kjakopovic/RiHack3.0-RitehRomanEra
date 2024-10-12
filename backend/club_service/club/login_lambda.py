@@ -116,6 +116,12 @@ def lambda_handler(event, context):
         'body': json.dumps({
             'message': 'Logged in successfully, welcome!',
             'token': access_token,
-            'refresh_token': refresh_token
+            'refresh_token': refresh_token,
+            "club": {
+                "club_id": club.get('club_id'),
+                "club_name": club.get('club_name'),
+                "default_working_hours": club.get('default_working_hours'),
+                "working_days": club.get('working_days')
+            }
         })
     }

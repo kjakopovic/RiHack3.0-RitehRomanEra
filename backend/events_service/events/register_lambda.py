@@ -17,7 +17,6 @@ def lambda_handler(event, context):
         required_attributes = {
             'club_id': str,
             'title': str,
-            'category': str,
             'description': str,
             'startingAt': str,
             'endingAt': str
