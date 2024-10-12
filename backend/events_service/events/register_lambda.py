@@ -8,7 +8,6 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 def lambda_handler(event, context):
-    # Parse the event body if present
     try:
         event = json.loads(event.get('body')) if 'body' in event else event
 
@@ -112,7 +111,6 @@ def lambda_handler(event, context):
         if event.get('theme'):
             item_to_save['theme'] = event['theme']
 
-
         # Initialize a DynamoDB resource
         dynamodb = boto3.resource('dynamodb')
         events_table = dynamodb.Table(os.getenv('EVENTS_TABLE_NAME'))
@@ -124,9 +122,12 @@ def lambda_handler(event, context):
 
             giveaway_table.put_item(Item={
                 'giveaway_id': uuid.uuid4(),
+                'event_id': event_id,
                 'prize': event['giveaway']['prize'],
                 'description': event['giveaway']['description'],
-                'name': event['giveaway']['name']
+                'name': event['giveaway']['name'],
+                'users': [],
+                'entries': []
             })
         except Exception as e:
             logger.error(f'Error saving event to DynamoDB: {str(e)}')

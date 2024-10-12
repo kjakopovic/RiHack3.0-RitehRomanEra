@@ -9,5 +9,8 @@ build:
 build-RegisterEventFunction:
 	$(MAKE) build LAMBDA_FILE=events/register_lambda.py ARTIFACTS_DIR=$(ARTIFACTS_DIR)
 
+build-GetRandomGiveawayWinnerFunction:
+	$(MAKE) build LAMBDA_FILE=giveaway/get_random_winner_lambda.py ARTIFACTS_DIR=$(ARTIFACTS_DIR)
+
 build-SearchEventFunction:
 	$(MAKE) build LAMBDA_FILE=events/search_lambda.py ARTIFACTS_DIR=$(ARTIFACTS_DIR)

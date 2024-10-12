@@ -30,65 +30,9 @@ Resources:
       AttributeDefinitions:
         - AttributeName: event_id
           AttributeType: S
-        - AttributeName: title
-          AttributeType: S
-        - AttributeName: theme
-          AttributeType: S
-        - AttributeName: genre
-          AttributeType: S
-        - AttributeName: type
-          AttributeType: S
-        - AttributeName: startingAt
-          AttributeType: S
       KeySchema:
         - AttributeName: event_id
           KeyType: HASH
-      GlobalSecondaryIndexes:
-        - IndexName: title-index
-          KeySchema:
-            - AttributeName: title
-              KeyType: HASH
-          Projection:
-            ProjectionType: ALL
-          ProvisionedThroughput:
-            ReadCapacityUnits: 5
-            WriteCapacityUnits: 5
-        - IndexName: theme-index
-          KeySchema:
-            - AttributeName: theme
-              KeyType: HASH
-          Projection:
-            ProjectionType: ALL
-          ProvisionedThroughput:
-            ReadCapacityUnits: 5
-            WriteCapacityUnits: 5
-        - IndexName: genre-index
-          KeySchema:
-            - AttributeName: genre
-              KeyType: HASH
-          Projection:
-            ProjectionType: ALL
-          ProvisionedThroughput:
-            ReadCapacityUnits: 5
-            WriteCapacityUnits: 5
-        - IndexName: type-index
-          KeySchema:
-            - AttributeName: type
-              KeyType: HASH
-          Projection:
-            ProjectionType: ALL
-          ProvisionedThroughput:
-            ReadCapacityUnits: 5
-            WriteCapacityUnits: 5
-        - IndexName: startingAt-index
-          KeySchema:
-            - AttributeName: startingAt
-              KeyType: HASH
-          Projection:
-            ProjectionType: ALL
-          ProvisionedThroughput:
-            ReadCapacityUnits: 5
-            WriteCapacityUnits: 5
       ProvisionedThroughput:
         ReadCapacityUnits: 5
         WriteCapacityUnits: 5
@@ -160,6 +104,47 @@ Resources:
             Path: /event/register
             Method: POST
             ApiId: !Ref EventsServiceApi
+
+  GetRandomGiveawayWinnerFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      CodeUri: ./
+      Handler: get_random_winner_lambda.lambda_handler
+      Runtime: python3.12
+      Environment:
+        Variables:
+          GIVEAWAY_TABLE_NAME: !Ref GiveawayTable
+          USERS_TABLE_NAME: !ImportValue user-service-UsersTableName
+      Architectures:
+        - x86_64
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            # Events table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:PutItem"
+                - "dynamodb:DeleteItem"
+                - "dynamodb:GetItem"
+                - "dynamodb:UpdateItem"
+              Resource: !GetAtt EventsTable.Arn
+            # Users table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:PutItem"
+                - "dynamodb:DeleteItem"
+                - "dynamodb:GetItem"
+                - "dynamodb:UpdateItem"
+              Resource: !ImportValue user-service-UsersTableArn
+      Events:
+        GetRandomGiveawayWinnerEndpoint:
+          Type: HttpApi 
+          Properties:
+            Path: /giveaway/winner
+            Method: GET
+            ApiId: !Ref EventsServiceApi
   
   SearchEventFunction:
     Type: AWS::Serverless::Function
@@ -167,7 +152,7 @@ Resources:
       BuildMethod: makefile
     Properties:
       CodeUri: ./
-      Handler: search_lambda.lambda_handler  # Assumes your Lambda handler is defined as `search_lambda.py`
+      Handler: search_lambda.lambda_handler
       Runtime: python3.12
       Environment:
         Variables:
