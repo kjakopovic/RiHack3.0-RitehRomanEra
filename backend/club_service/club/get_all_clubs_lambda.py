@@ -75,8 +75,7 @@ def lambda_handler(event, context):
                     'default_working_hours': club['default_working_hours'],
                     'club_id': club['club_id'],
                     'longitude': float(club['longitude']),
-                    'latitude': float(club['latitude']),
-                    'tags': club['tags']
+                    'latitude': float(club['latitude'])
                 }
 
                 filtered_clubs.append(club_response)

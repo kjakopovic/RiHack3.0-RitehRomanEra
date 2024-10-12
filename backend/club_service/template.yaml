@@ -198,6 +198,46 @@ Resources:
             Method: GET
             ApiId: !Ref ClubServiceApi
 
+  RefreshTokenFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      CodeUri: ./
+      Handler: get_all_clubs_lambda.lambda_handler
+      Runtime: python3.12
+      Environment:
+        Variables:
+          CLUBS_TABLE_NAME: !Ref ClubsTable
+          JWT_SECRET_NAME: !Ref JwtSecretName
+          SECRETS_REGION_NAME: !Ref SecretsRegionName
+      Architectures:
+        - x86_64
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            # Users table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:PutItem"
+                - "dynamodb:DeleteItem"
+                - "dynamodb:GetItem"
+                - "dynamodb:UpdateItem"
+                - "dynamodb:Scan"
+              Resource: !GetAtt ClubsTable.Arn
+            # Secrets Manager for jwt secret permissions
+            - Effect: Allow
+              Action:
+                - secretsmanager:GetSecretValue
+              Resource: !Ref JwtSecretArn
+      Events:
+        RefreshTokenEndpoint:
+          Type: HttpApi 
+          Properties:
+            Path: /club/refresh
+            Method: GET
+            ApiId: !Ref ClubServiceApi
+
 Outputs:
   ClubsTableArn:
     Description: "Users table ARN"

@@ -17,7 +17,6 @@ def lambda_handler(event, context):
         email = event['email']
         password = event['password']
         club_name = event['club_name']
-        tags = event['tags']
         default_working_hours = event['default_working_hours']
         working_days = event['working_days']
         longitude = event['longitude']
@@ -30,17 +29,6 @@ def lambda_handler(event, context):
             },
             'body': json.dumps({
                 'message': f'{e} is missing, please check and try again'
-            })
-        }
-    
-    if (not isinstance(tags, list)) or len(tags) == 0:
-        return {
-            'statusCode': 400,
-            'headers': {
-                'Content-Type': 'application/json'
-            },
-            'body': json.dumps({
-                'message': 'Tags is missing, please check and try again'
             })
         }
     
@@ -94,7 +82,6 @@ def lambda_handler(event, context):
                 'club_id': email,
                 'password': hashed_password,
                 'club_name': club_name,
-                'tags': tags,
                 'default_working_hours': default_working_hours,
                 'working_days': working_days,
                 'longitude': Decimal(longitude),
