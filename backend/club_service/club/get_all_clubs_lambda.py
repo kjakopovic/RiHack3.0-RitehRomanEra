@@ -70,14 +70,20 @@ def lambda_handler(event, context):
                 club['latitude'] = float(club['latitude'])
                 club['longitude'] = float(club['longitude'])
 
+            logger.info(f'GET ALL CLUBS - Converting to JSON: {clubs_items}')
+
+            clubs_items = json.dumps(clubs_items)
+
+            logger.info(f'GET ALL CLUBS - filtering clubs info')
+
             filtered_clubs = [
                 {key: value for key, value in club.items() if key not in ['password', 'refresh_token']}
                 for club in clubs
             ]
 
-            logger.info(f'REGISTER CLUB - Found clubs: {filtered_clubs}')
+            logger.info(f'GET ALL CLUBS - Found clubs: {filtered_clubs}')
         except Exception as e:
-            logger.error(f'REGISTER CLUB - Unable to read item: {str(e)}')
+            logger.error(f'GET ALL CLUBS - Unable to read item: {str(e)}')
 
             return {
                 'statusCode': 500,
