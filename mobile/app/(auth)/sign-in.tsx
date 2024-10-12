@@ -148,15 +148,25 @@ const SignIn: React.FC = () => {
             </View>
           </View>
         </View>
-        <TouchableOpacity
-          onPress={() => setShowPassword(!showPassword)}
-          className="flex items-start justify-start w-full px-5"
-        >
-          <Text className="text-primary-80 text-base font-light mt-1">
-            Forgot Password?
-          </Text>
-        </TouchableOpacity>
+        <View className="flex flex-row items-start justify-between w-full px-5">
+          <TouchableOpacity
+            onPress={() => setShowPassword(!showPassword)}
+            className="flex items-start justify-start"
+          >
+            <Text className="text-primary-80 text-base font-light mt-1">
+              Show Password
+            </Text>
+          </TouchableOpacity>
 
+          <TouchableOpacity
+            onPress={() => router.push("/forgot-password")}
+            className="flex items-center justify-start w-full px-5"
+          >
+            <Text className="text-primary-80 text-base font-light mt-1">
+              Forgot Password?
+            </Text>
+          </TouchableOpacity>
+        </View>
         <View className="flex w-full items-center justify-center px-5 mt-24">
           <TouchableOpacity
             onPress={handleSignIn}

@@ -49,10 +49,11 @@ const Map = () => {
   const [selectedClubAddress, setSelectedClubAddress] =
     useState<Location.LocationGeocodedAddress | null>(null);
 
-  const getAllClubs = async () => {
+  // Modify getAllClubs to accept latitude and longitude
+  const getAllClubs = async (latitude: number, longitude: number) => {
     try {
       const response = await fetch(
-        `https://agw3r0w73c.execute-api.eu-central-1.amazonaws.com/api-v1/club/get?longitude=${region.longitude}&latitude=${region.latitude}`
+        `https://agw3r0w73c.execute-api.eu-central-1.amazonaws.com/api-v1/club/get?longitude=${longitude}&latitude=${latitude}`
       );
       const data: GetClubsResponse = await response.json();
       setClubs(data.clubs); // Store the clubs in state
@@ -90,8 +91,8 @@ const Map = () => {
       // Set the user's location to state
       setLocation(userLocation.coords);
 
-      // Fetch clubs after setting location
-      await getAllClubs();
+      // Fetch clubs using the actual latitude and longitude
+      await getAllClubs(latitude, longitude);
 
       setLoading(false); // Stop loading after fetching location and clubs
     })();
