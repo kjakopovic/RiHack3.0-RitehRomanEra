@@ -28,10 +28,10 @@ def lambda_handler(event, context):
                 })
             }
         
-        logger.info(f'GET ALL CLUBS - Converting longitude and latitude to decimals.')
+        logger.info(f'GET ALL CLUBS - Converting longitude: {longitude} and latitude: {latitude} to decimals.')
         
-        longitude = Decimal(longitude)
-        latitude = Decimal(latitude)
+        longitude = Decimal(str(longitude))
+        latitude = Decimal(str(latitude))
         
         logger.info(f'GET ALL CLUBS - Getting table for clubs.')
 

@@ -93,6 +93,7 @@ def lambda_handler(event, context):
         event_id = str(uuid.uuid4())
         logger.info(f'Generated event ID: {event_id}')
 
+        dynamodb = boto3.resource('dynamodb')
         clubs_table = dynamodb.Table(os.getenv('CLUBS_TABLE_NAME'))
 
         club_info = clubs_table.get_item(
