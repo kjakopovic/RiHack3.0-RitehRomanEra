@@ -17,7 +17,7 @@ def lambda_handler(event, context):
     try:
         email = event['email']
         password = event['password']
-        first_name = event['first_name']
+        first_name = event['first_name'] 
         last_name = event['last_name']
         age = event['age']
         profile_picture_base64 = event.get('profile_picture')
