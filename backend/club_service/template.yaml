@@ -273,8 +273,8 @@ Resources:
         UpdateClubEndpoint:
           Type: HttpApi 
           Properties:
-            Path: /club/register
-            Method: POST
+            Path: /club/update
+            Method: PUT
             ApiId: !Ref ClubServiceApi
 
 Outputs:
