@@ -21,3 +21,5 @@ build-JoinEventFunction:
 build-LeaveEventFunction:
 	$(MAKE) build LAMBDA_FILE=events/leave_event_lambda.py ARTIFACTS_DIR=$(ARTIFACTS_DIR)
 
+build-JoinGiveawayFunction:
+	$(MAKE) build LAMBDA_FILE=giveaway/giveaway_join_lambda.py ARTIFACTS_DIR=$(ARTIFACTS_DIR)

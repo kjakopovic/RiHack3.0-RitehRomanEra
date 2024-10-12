@@ -141,7 +141,7 @@ Resources:
       BuildMethod: makefile
     Properties:
       CodeUri: ./
-      Handler: join_event_lambda.lambda_handler  # Assuming your Lambda code is in join_lambda.py
+      Handler: join_event_lambda.lambda_handler
       Runtime: python3.12
       Environment:
         Variables:
@@ -223,7 +223,6 @@ Resources:
             Method: POST
             ApiId: !Ref EventsServiceApi
 
-
   GetRandomGiveawayWinnerFunction:
     Type: AWS::Serverless::Function
     Metadata:
@@ -292,6 +291,56 @@ Resources:
           Properties:
             Path: /event/search  # URL path for search functionality
             Method: GET  # Using GET method as it's search-based
+            ApiId: !Ref EventsServiceApi
+
+  JoinGiveawayFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      CodeUri: ./
+      Handler: leave_event_lambda.lambda_handler
+      Runtime: python3.12
+      Environment:
+        Variables:
+          EVENTS_TABLE_NAME: !Ref EventsTable
+          GIVEAWAY_TABLE_NAME: !Ref GiveawayTable
+          USERS_TABLE_NAME: !ImportValue user-service-UsersTableName
+          JWT_SECRET_NAME: !Ref JwtSecretName
+          SECRETS_REGION_NAME: !Ref SecretsRegionName
+      Architectures:
+        - x86_64
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            # Events table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:GetItem"
+                - "dynamodb:UpdateItem"
+              Resource: !GetAtt EventsTable.Arn
+            # Giveaway table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:*"
+              Resource: !GetAtt GiveawayTable.Arn
+            # Users table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:GetItem"
+                - "dynamodb:UpdateItem"
+              Resource: !ImportValue user-service-UsersTableArn
+            # Secrets Manager for JWT secret permissions
+            - Effect: Allow
+              Action:
+                - secretsmanager:GetSecretValue
+              Resource: !Ref JwtSecretArn
+      Events:
+        JoinGiveawayEndpoint:
+          Type: HttpApi
+          Properties:
+            Path: /giveaway/join
+            Method: GET
             ApiId: !Ref EventsServiceApi
 
 Outputs:
