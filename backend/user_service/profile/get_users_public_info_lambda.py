@@ -63,6 +63,7 @@ def lambda_handler(event, context):
                 'email': response['Item']['email'] if response.get('Item').get('email') else None,
                 'first_name': response['Item']['first_name'] if response.get('Item').get('first_name') else None,
                 'last_name': response['Item']['last_name'] if response.get('Item').get('last_name') else None,
+                'points': response['Item']['points'] if response.get('Item').get('points') else 0,
                 'profile_picture': user_profile_picture
             }
         })
