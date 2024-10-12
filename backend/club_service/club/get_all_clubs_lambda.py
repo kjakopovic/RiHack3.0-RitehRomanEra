@@ -66,20 +66,24 @@ def lambda_handler(event, context):
 
             clubs_items = clubs.get('Items', [])
 
+            filtered_clubs = []
+
             for club in clubs_items:
-                club['latitude'] = float(club['latitude'])
-                club['longitude'] = float(club['longitude'])
+                club_response = {
+                    'club_name': club['club_name'],
+                    'working_days': club['working_days'],
+                    'default_working_hours': club['default_working_hours'],
+                    'club_id': club['club_id'],
+                    'longitude': float(club['longitude']),
+                    'latitude': float(club['latitude']),
+                    'tags': club['tags']
+                }
+
+                filtered_clubs.append(club_response)
 
             logger.info(f'GET ALL CLUBS - Converting to JSON: {clubs_items}')
 
             clubs_items = json.dumps(clubs_items)
-
-            logger.info(f'GET ALL CLUBS - filtering clubs info')
-
-            filtered_clubs = [
-                {key: value for key, value in club.items() if key not in ['password', 'refresh_token']}
-                for club in clubs
-            ]
 
             logger.info(f'GET ALL CLUBS - Found clubs: {filtered_clubs}')
         except Exception as e:
