@@ -40,7 +40,24 @@ def lambda_handler(event, context):
             users = giveaway_item.get('users', [])
             entries = giveaway_item.get('entries', [])
 
+            if len(users) == 0 or len(entries) == 0:
+                return {
+                    'statusCode': 400,
+                    'headers': {
+                        'Content-Type': 'application/json'
+                    },
+                    'body': json.dumps({
+                        'message': 'No users found in the giveaway'
+                    })
+                }
+
             winner = random.choices(users, weights=entries, k=1)[0]
+
+            user = users_table.get_item(
+                Key={
+                    'email': winner
+                }
+            )
         except Exception as e:
             logger.error(f'Error saving event to DynamoDB: {str(e)}')
             return {
@@ -60,7 +77,11 @@ def lambda_handler(event, context):
             },
             'body': json.dumps({
                 'message': 'Event registered successfully!',
-                'winner': winner
+                'winner': {
+                    'email': winner,
+                    'first_name': user.get('first_name'),
+                    'last_name': user.get('last_name')
+                }
             })
         }
     except Exception as e:
