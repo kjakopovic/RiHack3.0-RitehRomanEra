@@ -1,39 +1,139 @@
 import json
-import bcrypt
+import logging
+import uuid
 import boto3
 import os
-import logging
-
-import backend.common.common as common_handler
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 def lambda_handler(event, context):
-    event = json.loads(event.get('body')) if 'body' in event else event
-
-    logger.info(f'REGISTER CLUB - Checking if every required attribute is found: {event}')
-
+    # Parse the event body if present
     try:
-        email = event['email']
-        password = event['password']
-    except Exception as e:
+        event = json.loads(event.get('body')) if 'body' in event else event
+
+        logger.info(f'REGISTER CLUB - Checking if every required attribute is found: {event}')
+
+        # Define the required attributes and their types
+        required_attributes = {
+            'club_id': str,
+            'title': str,
+            'category': str,
+            'description': str,
+            'startingAt': str,  # Use string for date validation
+            'endingAt': str,    # Use string for date validation
+            'performers': list,
+            'giveaway': dict
+        }
+
+        # Define the structure of the giveaway object
+        giveaway_attributes = {
+            'prize': str,
+            'description': str,
+            'name': str
+        }
+
+        # Check for required attributes
+        for key, expected_type in required_attributes.items():
+            if key not in event:
+                return {
+                    'statusCode': 400,
+                    'headers': {
+                        'Content-Type': 'application/json'
+                    },
+                    'body': json.dumps({
+                        'message': f'Missing required attribute: {key}'
+                    })
+                }
+            if not isinstance(event[key], expected_type):
+                return {
+                    'statusCode': 400,
+                    'headers': {
+                        'Content-Type': 'application/json'
+                    },
+                    'body': json.dumps({
+                        'message': f'Attribute {key} must be of type {expected_type.__name__}'
+                    })
+                }
+
+        # Check the structure of the giveaway object
+        for key, expected_type in giveaway_attributes.items():
+            if key not in event['giveaway']:
+                return {
+                    'statusCode': 400,
+                    'headers': {
+                        'Content-Type': 'application/json'
+                    },
+                    'body': json.dumps({
+                        'message': f'Missing required giveaway attribute: {key}'
+                    })
+                }
+            if not isinstance(event['giveaway'][key], expected_type):
+                return {
+                    'statusCode': 400,
+                    'headers': {
+                        'Content-Type': 'application/json'
+                    },
+                    'body': json.dumps({
+                        'message': f'Giveaway attribute {key} must be of type {expected_type.__name__}'
+                    })
+                }
+
+        # Generate a unique event ID
+        event_id = str(uuid.uuid4())
+        logger.info(f'Generated event ID: {event_id}')
+
+        # Prepare only the required attributes for saving
+        item_to_save = {
+            'event_id': event_id,
+            'club_id': event['club_id'],
+            'title': event['title'],
+            'category': event['category'],
+            'description': event['description'],
+            'startingAt': event['startingAt'],
+            'endingAt': event['endingAt'],
+            'performers': event['performers'],
+            'giveaway': event['giveaway']
+        }
+
+        # Initialize a DynamoDB resource
+        dynamodb = boto3.resource('dynamodb')
+        events_table = dynamodb.Table(os.getenv('EVENTS_TABLE_NAME'))
+
+        # Save the item in the DynamoDB table
+        try:
+            events_table.put_item(Item=item_to_save)
+        except Exception as e:
+            logger.error(f'Error saving event to DynamoDB: {str(e)}')
+            return {
+                'statusCode': 500,
+                'headers': {
+                    'Content-Type': 'application/json'
+                },
+                'body': json.dumps({
+                    'message': 'Failed to register event due to internal server error.'
+                })
+            }
+
+        logger.info(f'Event registered successfully: {item_to_save}')
+
         return {
-            'statusCode': 400,
+            'statusCode': 200,
             'headers': {
                 'Content-Type': 'application/json'
             },
             'body': json.dumps({
-                'message': f'{e} is missing, please check and try again'
+                'message': 'Event registered successfully!',
+                'event_id': event_id  # Return the event ID for confirmation
             })
         }
-  
-    return {
-        'statusCode': 200,
-        'headers': {
-            'Content-Type': 'application/json'
-        },
-        'body': json.dumps({
-            'message': 'Registered successfully, welcome!'
-        })
-    }
+    except Exception as e:
+        return {
+            'statusCode': 500,
+            'headers': {
+                'Content-Type': 'application/json'
+            },
+            'body': json.dumps({
+                'message': f"An error occurred: {str(e)}"
+            })
+        }
