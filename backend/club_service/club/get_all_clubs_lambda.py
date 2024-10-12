@@ -78,7 +78,7 @@ def lambda_handler(event, context):
                         'latitude': float(club['latitude'])
                     }
 
-                filtered_clubs.append(club_response)
+                    filtered_clubs.append(club_response)
 
             logger.info(f'GET ALL CLUBS - Found clubs: {filtered_clubs}')
         except Exception as e:
