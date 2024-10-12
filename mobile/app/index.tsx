@@ -18,7 +18,7 @@ export default function Onboarding() {
   return (
     <SafeAreaView className="h-full flex flex-col justify-between items-center bg-primary">
       <View className="flex flex-col items-center justify-center h-1/2 mt-24">
-        <Image source={images.logo} className="h-28 w-28" />
+        <Image source={images.logo} className="h-[115px] w-28" />
         <Text className="text-3xl font-medium text-primary-80 mt-5">
           Connect, Visit, Enjoy
         </Text>

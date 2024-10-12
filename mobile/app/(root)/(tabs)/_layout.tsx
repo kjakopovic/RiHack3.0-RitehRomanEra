@@ -19,12 +19,12 @@ const TabIcon = ({
 }) => (
   <View
     className={`flex flex-row justify-center items-center rounded-full ${
-      focused ? "bg-secondary-100" : ""
+      focused ? "bg-neutral-200" : ""
     } ${styles}`}
   >
     <View
       className={`rounded-full w-[30px] h-[30px] items-center justify-center ${
-        focused ? "bg-secondary-100" : ""
+        focused ? "bg-neutral-200" : ""
       }`}
     >
       <Image
@@ -47,7 +47,7 @@ const TabsLayout = () => {
         screenOptions={{
           tabBarShowLabel: false,
           tabBarStyle: {
-            backgroundColor: "#096B72",
+            backgroundColor: "#0A5EFE",
             position: "absolute",
             borderTopLeftRadius: 32,
             borderTopRightRadius: 32,

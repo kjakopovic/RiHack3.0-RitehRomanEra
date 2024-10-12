@@ -58,7 +58,7 @@ const SignUp = () => {
       if (router.canDismiss()) {
         router.dismissAll();
       }
-      router.replace("/home");
+      router.replace("/sign-in");
     } catch (error) {
       console.error("Error:", error);
     }

@@ -114,7 +114,7 @@ const SignIn: React.FC = () => {
       <ScrollView className="w-full h-full">
         <View className="w-full flex items-center justify-center gap-y-5 mt-5">
           <View className="flex items-center justify-center">
-            <Image source={images.logo} className="h-14 w-14" />
+            <Image source={images.logo} className="h-[66px] w-[64.5px]" />
             <Text className="text-txt-100 text-2xl font-bold ml-2 mt-1">
               RiConnect
             </Text>
@@ -128,6 +128,7 @@ const SignIn: React.FC = () => {
               <TextInput
                 className="bg-primary p-2 rounded-lg w-full border border-primary-80"
                 placeholder="Email"
+                placeholderTextColor="gray"
                 onChangeText={(text) => setEmail(text)}
                 autoCapitalize="none"
                 keyboardType="email-address"
@@ -140,6 +141,7 @@ const SignIn: React.FC = () => {
               <TextInput
                 className="bg-primary p-2 rounded-lg w-full border border-primary-80"
                 placeholder="Password"
+                placeholderTextColor="gray"
                 secureTextEntry={showPassword}
                 onChangeText={(text) => setPassword(text)}
               />

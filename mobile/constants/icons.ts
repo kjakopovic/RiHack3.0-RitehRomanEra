@@ -9,6 +9,9 @@ import google from "../assets/icons/google.png";
 import arrowDown from "../assets/icons/arrowDown.png";
 import arrowUp from "../assets/icons/arrowUp.png";
 import filter from "../assets/icons/filter.png";
+import hourglass from "../assets/icons/hourglass.png";
+import calendar from "../assets/icons/calendar.png";
+import share from "../assets/icons/share.png";
 
 export {
   home,
@@ -22,4 +25,7 @@ export {
   arrowDown,
   arrowUp,
   filter,
+  hourglass,
+  calendar,
+  share,
 };
