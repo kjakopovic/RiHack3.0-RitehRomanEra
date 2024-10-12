@@ -19,8 +19,7 @@ def lambda_handler(event, context):
     logger.info(f'UPDATE USERS PRIVATE INFO - Checking if every required attribute is found: {event}')
 
     try:
-        new_users_age = event['age'] if 'age' in event else None
-        new_phone_number = event['phone_number'] if 'phone_number' in event else None
+        points = event['points'] if 'points' in event else None
     except Exception as e:
         return {
             'statusCode': 400,
@@ -34,7 +33,7 @@ def lambda_handler(event, context):
     
     logger.info(f'UPDATE USERS PRIVATE INFO - Checking if request parameters are in valid format')
     
-    if (new_users_age is not None and not isinstance(new_users_age, int)) or (new_phone_number is not None and not isinstance(new_phone_number, str)):
+    if (points is not None and not isinstance(points, int)):
         return {
             'statusCode': 400,
             'headers': {
@@ -74,13 +73,9 @@ def lambda_handler(event, context):
         update_expression = "SET "
         expression_attribute_values = {}
 
-        if new_phone_number is not None:
-            update_expression += "phone_number = :phone_number, "
-            expression_attribute_values[':phone_number'] = new_phone_number
-
-        if new_users_age is not None:
-            update_expression += "age = :age, "
-            expression_attribute_values[':age'] = new_users_age
+        if points is not None:
+            update_expression += "points = :points, "
+            expression_attribute_values[':points'] = response.get('Item').get('points') + points
 
         # Check if there is anything to update
         if expression_attribute_values:
