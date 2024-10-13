@@ -534,7 +534,7 @@ Resources:
             - Effect: Allow
               Action:
                 - "dynamodb:*"
-              Resource: !ImportValue user-service-ClubsTableArn
+              Resource: !ImportValue club-service-ClubsTableArn
       Events:
         GetClubsEventsEndpoint:
           Type: HttpApi
