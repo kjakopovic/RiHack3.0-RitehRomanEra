@@ -9,6 +9,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import BackButton from "@/components/BackButton";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { useFilterStore } from "@/store/filter-store";
+import { router } from "expo-router";
 
 const Filters = () => {
   // Define the filters
@@ -32,40 +34,73 @@ const Filters = () => {
     "Masquerade Ball",
   ];
 
-  // Combine all tags into one array
-  const allFilters = [...genres, ...eventTypes, ...eventThemes];
+  // Access filter states and actions from the store
+  const selectedGenres = useFilterStore((state) => state.selectedGenres);
+  const selectedTypes = useFilterStore((state) => state.selectedTypes);
+  const selectedThemes = useFilterStore((state) => state.selectedThemes);
+  const selectedDate = useFilterStore((state) => state.selectedDate);
+  const setSelectedGenres = useFilterStore((state) => state.setSelectedGenres);
+  const setSelectedTypes = useFilterStore((state) => state.setSelectedTypes);
+  const setSelectedThemes = useFilterStore((state) => state.setSelectedThemes);
+  const setSelectedDate = useFilterStore((state) => state.setSelectedDate);
+  const clearFilters = useFilterStore((state) => state.clearFilters);
 
-  // State to track selected tags
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-
-  // State to track selected date
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
 
-  // Function to handle tag selection
-  const toggleTag = (tag: string) => {
-    if (selectedTags.includes(tag)) {
-      // Remove the tag if it's already selected
-      setSelectedTags(selectedTags.filter((t) => t !== tag));
+  // Function to handle genre selection
+  const toggleGenre = (genre: string) => {
+    if (selectedGenres.includes(genre)) {
+      // Remove the genre if it's already selected
+      setSelectedGenres(selectedGenres.filter((g) => g !== genre));
     } else {
-      // Add the tag to the selected list
-      setSelectedTags([...selectedTags, tag]);
+      // Add the genre to the selected list
+      setSelectedGenres([...selectedGenres, genre]);
+    }
+  };
+
+  // Function to handle event type selection
+  const toggleType = (type: string) => {
+    if (selectedTypes.includes(type)) {
+      // Remove the type if it's already selected
+      setSelectedTypes(selectedTypes.filter((t) => t !== type));
+    } else {
+      // Add the type to the selected list
+      setSelectedTypes([...selectedTypes, type]);
+    }
+  };
+
+  // Function to handle event theme selection
+  const toggleTheme = (theme: string) => {
+    if (selectedThemes.includes(theme)) {
+      // Remove the theme if it's already selected
+      setSelectedThemes(selectedThemes.filter((th) => th !== theme));
+    } else {
+      // Add the theme to the selected list
+      setSelectedThemes([...selectedThemes, theme]);
     }
   };
 
   // Function to handle date selection
-  const onChangeDate = (event: any, selectedDate?: Date) => {
+  const onChangeDate = (event: any, date?: Date) => {
     setShowDatePicker(Platform.OS === "ios");
-    if (selectedDate) {
-      setSelectedDate(selectedDate);
+    if (date) {
+      setSelectedDate(date.toISOString().split("T")[0]);
     }
   };
 
   // Function to apply filters
   const applyFilters = () => {
-    console.log("Selected Tags:", selectedTags);
+    console.log("Selected Genres:", selectedGenres);
+    console.log("Selected Event Types:", selectedTypes);
+    console.log("Selected Event Themes:", selectedThemes);
     console.log("Selected Date:", selectedDate);
-    // You can proceed to filter your events based on selectedTags and selectedDate
+    // Navigate back to the Home screen
+    router.back();
+  };
+
+  // Function to clear all filters
+  const resetFilters = () => {
+    clearFilters();
   };
 
   return (
@@ -87,14 +122,14 @@ const Filters = () => {
           className="bg-neutral-100 px-4 py-2 rounded-full mt-2"
         >
           <Text className="text-txt-100 text-sm">
-            {selectedDate ? selectedDate.toLocaleDateString() : "Choose a date"}
+            {selectedDate ? selectedDate : "Choose a date"}
           </Text>
         </TouchableOpacity>
 
         {showDatePicker && (
           <View className="mt-2 w-full items-center">
             <DateTimePicker
-              value={selectedDate || new Date()}
+              value={new Date(selectedDate as string) || new Date()}
               mode="date"
               display="default"
               onChange={onChangeDate}
@@ -109,14 +144,16 @@ const Filters = () => {
           {genres.map((genre) => (
             <TouchableOpacity
               key={genre}
-              onPress={() => toggleTag(genre)}
+              onPress={() => toggleGenre(genre)}
               className={`${
-                selectedTags.includes(genre) ? "bg-primary-0" : "bg-neutral-100"
+                selectedGenres.includes(genre)
+                  ? "bg-primary-0"
+                  : "bg-neutral-100"
               } px-4 py-2 rounded-full mr-2 mb-2`}
             >
               <Text
                 className={`${
-                  selectedTags.includes(genre) ? "text-white" : "text-txt-100"
+                  selectedGenres.includes(genre) ? "text-white" : "text-txt-100"
                 } text-sm`}
               >
                 {genre}
@@ -133,14 +170,14 @@ const Filters = () => {
           {eventTypes.map((type) => (
             <TouchableOpacity
               key={type}
-              onPress={() => toggleTag(type)}
+              onPress={() => toggleType(type)}
               className={`${
-                selectedTags.includes(type) ? "bg-primary-0" : "bg-neutral-100"
+                selectedTypes.includes(type) ? "bg-primary-0" : "bg-neutral-100"
               } px-4 py-2 rounded-full mr-2 mb-2`}
             >
               <Text
                 className={`${
-                  selectedTags.includes(type) ? "text-white" : "text-txt-100"
+                  selectedTypes.includes(type) ? "text-white" : "text-txt-100"
                 } text-sm`}
               >
                 {type}
@@ -157,14 +194,16 @@ const Filters = () => {
           {eventThemes.map((theme) => (
             <TouchableOpacity
               key={theme}
-              onPress={() => toggleTag(theme)}
+              onPress={() => toggleTheme(theme)}
               className={`${
-                selectedTags.includes(theme) ? "bg-primary-0" : "bg-neutral-100"
+                selectedThemes.includes(theme)
+                  ? "bg-primary-0"
+                  : "bg-neutral-100"
               } px-4 py-2 rounded-full mr-2 mb-2`}
             >
               <Text
                 className={`${
-                  selectedTags.includes(theme) ? "text-white" : "text-txt-100"
+                  selectedThemes.includes(theme) ? "text-white" : "text-txt-100"
                 } text-sm`}
               >
                 {theme}
@@ -179,6 +218,16 @@ const Filters = () => {
           className="bg-primary-0 px-4 py-2 w-full items-center rounded-full mt-8 mb-4 self-center"
         >
           <Text className="text-white text-base font-bold">Apply Filters</Text>
+        </TouchableOpacity>
+
+        {/* Clear Filters Button */}
+        <TouchableOpacity
+          onPress={resetFilters}
+          className="bg-neutral-100 px-4 py-2 w-full items-center rounded-full mb-4 self-center"
+        >
+          <Text className="text-txt-100 text-base font-bold">
+            Clear Filters
+          </Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

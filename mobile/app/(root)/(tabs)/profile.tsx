@@ -35,7 +35,7 @@ const Profile = () => {
             className="bg-primary-0 p-2 rounded-lg items-center justify-center"
           >
             <Text className="text-sm font-semibold text-white">
-              Points: 1000
+              Points info
             </Text>
           </TouchableOpacity>
         </View>
@@ -93,13 +93,6 @@ const Profile = () => {
               Points Information
             </Text>
             <View className="flex flex-col items-start justify-start mt-5">
-              <View className="flex flex-row items-center justify-start mb-2">
-                <Image source={icons.star} className="h-7 w-7 mr-2" />
-                <Text className="text-txt-200 text-lg">Your points:</Text>
-                <Text className="text-txt-100 text-lg font-bold ml-2">
-                  1000
-                </Text>
-              </View>
               {/* Added explanation about earning points */}
               <Text className="mt-5 text-lg text-txt-200">
                 You can earn points through the following actions:

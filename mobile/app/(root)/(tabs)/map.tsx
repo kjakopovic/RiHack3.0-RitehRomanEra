@@ -1,3 +1,5 @@
+// Map.tsx
+
 import React, { useEffect, useState } from "react";
 import {
   StyleSheet,
@@ -57,6 +59,7 @@ const Map = () => {
   const [loading, setLoading] = useState(true); // Loading state
   const [clubModalVisible, setClubModalVisible] = useState(false);
   const [events, setEvents] = useState<Event[]>([]); // State to store events
+  const [eventsLoading, setEventsLoading] = useState<boolean>(false); // Loading state for events
 
   // State to store clubs and selected club
   const [clubs, setClubs] = useState<Club[]>([]); // Stores the list of clubs
@@ -72,9 +75,9 @@ const Map = () => {
       );
       const data: GetClubsResponse = await response.json();
       setClubs(data.clubs); // Store the clubs in state
-      console.log(data);
+      console.log("Fetched Clubs:", data.clubs);
     } catch (error) {
-      console.error(error);
+      console.error("Error fetching clubs:", error);
     }
   };
 
@@ -101,7 +104,7 @@ const Map = () => {
       };
       setRegion(userRegion);
 
-      console.log("Region:", userRegion);
+      console.log("User Region:", userRegion);
 
       // Set the user's location to state
       setLocation(userLocation.coords);
@@ -113,34 +116,97 @@ const Map = () => {
     })();
   }, []);
 
-  // Perform reverse geocoding when a club is selected
+  // Perform reverse geocoding and fetch events when a club is selected
   useEffect(() => {
     if (selectedClub) {
-      // Perform reverse geocoding
+      // Fetch events for the selected club
       (async () => {
         try {
-          const API_URL = process.env.EXPO_PUBLIC_EVENT_API_URL;
+          setEventsLoading(true); // Start loading events
 
-          const response = await fetch(
-            `${API_URL}/event/club?club_id=${selectedClub.club_id}`,
-            {
-              method: "GET",
-              headers: {
-                "Content-Type": "application/json",
-              },
-            }
-          );
+          const API_URL = process.env.EXPO_PUBLIC_EVENT_API_URL;
+          console.log("API_URL for Events Fetch:", API_URL);
+
+          if (!API_URL) {
+            console.error("API_URL is not defined");
+            setEventsLoading(false);
+            return;
+          }
+
+          console.log("Selected Club:", selectedClub.club_id);
+
+          const fetchURL = `${API_URL}/events/club?club_id=${selectedClub.club_id}`;
+          console.log("Fetch URL for Events:", fetchURL);
+
+          const response = await fetch(fetchURL, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+
+          console.log("Events Fetch Response Status:", response.status);
+
+          if (!response.ok) {
+            console.error("Error response from Events API:", response.status);
+            setEventsLoading(false);
+            return;
+          }
 
           const data = await response.json();
+          console.log("Events Data:", data);
 
-          console.log("Events:", data);
+          if (!data.events || !Array.isArray(data.events)) {
+            console.error("Invalid Events API response structure:", data);
+            setEventsLoading(false);
+            return;
+          }
 
-          setEvents(data.events);
+          // Perform reverse geocoding for each event
+          const eventsWithAddresses = await Promise.all(
+            data.events.map(async (event: Event) => {
+              try {
+                const addresses = await Location.reverseGeocodeAsync({
+                  latitude: parseFloat(event.latitude),
+                  longitude: parseFloat(event.longitude),
+                });
+
+                let address = null;
+                if (addresses.length > 0) {
+                  const addr = addresses[0];
+                  address = `${addr.street || ""}, ${addr.city || ""}, ${
+                    addr.region || ""
+                  }, ${addr.country || ""}`;
+                }
+
+                return {
+                  ...event,
+                  address,
+                };
+              } catch (error) {
+                console.error(
+                  "Error reverse geocoding event:",
+                  event.event_id,
+                  error
+                );
+                return {
+                  ...event,
+                  address: null,
+                };
+              }
+            })
+          );
+
+          setEvents(eventsWithAddresses);
+          console.log("Events with Addresses:", eventsWithAddresses);
+          setEventsLoading(false); // End loading events
         } catch (error) {
           console.error("Error fetching events:", error);
+          setEventsLoading(false); // End loading even if there's an error
         }
       })();
 
+      // Perform reverse geocoding for the selected club
       (async () => {
         try {
           const addressArray = await Location.reverseGeocodeAsync({
@@ -153,13 +219,14 @@ const Map = () => {
             setSelectedClubAddress(null);
           }
         } catch (error) {
-          console.error("Error in reverse geocoding:", error);
+          console.error("Error in reverse geocoding club:", error);
           setSelectedClubAddress(null);
         }
       })();
     } else {
       // Reset the address when no club is selected
       setSelectedClubAddress(null);
+      setEvents([]); // Clear events when no club is selected
     }
   }, [selectedClub]);
 
@@ -167,10 +234,10 @@ const Map = () => {
     <>
       <View style={styles.container}>
         {loading ? (
-          // Show loading indicator while fetching location
+          // Show loading indicator while fetching location and clubs
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#0000ff" />
-            <Text>Loading your location...</Text>
+            <Text>Loading your location and clubs...</Text>
           </View>
         ) : (
           // Render MapView only after loading is complete
@@ -191,6 +258,7 @@ const Map = () => {
                 }}
                 image={icons.marker}
                 onPress={() => {
+                  console.log("Marker pressed for club:", club.club_name);
                   setSelectedClub(club);
                   setClubModalVisible(true);
                 }}
@@ -247,13 +315,29 @@ const Map = () => {
                 Upcoming Events
               </Text>
               <View className="flex flex-col items-center justify-center mt-5 pb-5">
-                {events.map((event) => (
-                  <EventCard
-                    key={event.event_id}
-                    event={event}
-                    hasPhoto={false}
-                  />
-                ))}
+                {eventsLoading ? (
+                  // Show loading indicator while events are being fetched
+                  <View className="flex-1 justify-center items-center">
+                    <ActivityIndicator size="large" color="#0000ff" />
+                    <Text className="mt-4 text-base text-gray-700">
+                      Loading events...
+                    </Text>
+                  </View>
+                ) : events.length === 0 ? (
+                  // Show message if no events are found
+                  <Text className="text-lg font-semibold text-txt-100 mt-5">
+                    No events found
+                  </Text>
+                ) : (
+                  // Map over the events array and render EventCard for each event
+                  events.map((event) => (
+                    <EventCard
+                      key={event.event_id}
+                      event={event}
+                      hasPhoto={false}
+                    />
+                  ))
+                )}
               </View>
             </ScrollView>
           </View>

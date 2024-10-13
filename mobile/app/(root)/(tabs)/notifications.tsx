@@ -9,12 +9,15 @@ import {
   ActivityIndicator,
   Alert,
   RefreshControl,
+  Image,
+  TouchableOpacity,
 } from "react-native";
 import EventCard from "@/components/EventCard"; // Adjust the import path as needed
 import CameraComponent from "@/components/CameraComponent"; // Import the CameraComponent
 import { getTokens } from "@/lib/secureStore";
 import { uploadImage } from "@/lib/imageUpload";
 import * as Location from "expo-location";
+import Modal from "react-native-modal";
 
 interface Event {
   event_id: string;
@@ -27,7 +30,7 @@ interface Event {
   theme: string;
   longitude: string;
   latitude: string;
-  address?: string; // Add optional address field
+  address?: string | null; // Add optional address field
 }
 
 const Notifications = () => {
@@ -41,6 +44,7 @@ const Notifications = () => {
   const [liveEvents, setLiveEvents] = useState<Event[]>([]);
   const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
   const [pastEvents, setPastEvents] = useState<Event[]>([]);
+  const [modalVisible, setModalVisible] = useState(false);
 
   // New state variable for loading events
   const [loadingEvents, setLoadingEvents] = useState(true);
@@ -53,9 +57,22 @@ const Notifications = () => {
       console.log("Token retrieved successfully");
     } else {
       console.error("Error retrieving token");
+      Alert.alert(
+        "Authentication Error",
+        "Unable to retrieve authentication token."
+      );
+      setLoadingEvents(false);
+      return;
     }
 
     const API_URL = process.env.EXPO_PUBLIC_EVENT_API_URL;
+
+    if (!API_URL) {
+      console.error("API_URL is not defined");
+      Alert.alert("Configuration Error", "API URL is not configured properly.");
+      setLoadingEvents(false);
+      return;
+    }
 
     try {
       const response = await fetch(`${API_URL}/events/user`, {
@@ -68,46 +85,84 @@ const Notifications = () => {
 
       if (response.ok) {
         const data = await response.json();
-        console.log("User Events Data:", data);
 
         // Adjust according to the actual data structure
-        const eventsArray = data.events || data; // Use data.events if data contains an 'events' property
+        const eventsArray: Event[] = data.events || data; // Use data.events if data contains an 'events' property
 
-        setEvents(eventsArray);
+        // Perform reverse geocoding for each event
+        const eventsWithAddresses = await Promise.all(
+          eventsArray.map(async (event) => {
+            try {
+              const addresses = await Location.reverseGeocodeAsync({
+                latitude: parseFloat(event.latitude),
+                longitude: parseFloat(event.longitude),
+              });
+
+              console.log("Reverse Geocoded Addresses:", addresses);
+
+              let address = null;
+              if (addresses.length > 0) {
+                const addr = addresses[0];
+                console.log("Reverse Geocoded Address:", addr);
+                address = `${addr.street || ""}, ${addr.city || ""}, ${
+                  addr.region || ""
+                }, ${addr.country || ""}`;
+              }
+
+              return {
+                ...event,
+                address,
+              };
+            } catch (error) {
+              console.error(
+                `Error reverse geocoding event ${event.event_id}:`,
+                error
+              );
+              return {
+                ...event,
+                address: null, // Set address as null if reverse geocoding fails
+              };
+            }
+          })
+        );
+
+        setEvents(eventsWithAddresses);
 
         // Categorize events after fetching
-        categorizeEvents(eventsArray);
+        categorizeEvents(eventsWithAddresses);
+      } else if (response.status === 500) {
+        console.log("No events found");
+        setEvents([]);
+        categorizeEvents([]);
       } else {
         console.error("Error fetching events", response.status);
+        Alert.alert(
+          "Fetch Error",
+          `Failed to fetch events. Status code: ${response.status}`
+        );
       }
     } catch (error) {
       console.error("Error fetching events:", error);
+      Alert.alert("Network Error", "An error occurred while fetching events.");
     } finally {
       setLoadingEvents(false); // End loading
     }
   };
+
   useEffect(() => {
     fetchUserEvents();
   }, []);
 
   const categorizeEvents = (events: Event[]) => {
     const now = new Date();
-    console.log("Current Time:", now);
 
     const live: Event[] = [];
     const upcoming: Event[] = [];
     const past: Event[] = [];
 
     events.forEach((event) => {
-      console.log("Event:", event.title);
-      console.log("startingAt:", event.startingAt);
-      console.log("endingAt:", event.endingAt);
-
       const startTime = new Date(event.startingAt);
       const endTime = new Date(event.endingAt);
-
-      console.log("Parsed startTime:", startTime);
-      console.log("Parsed endTime:", endTime);
 
       if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
         console.error(`Invalid date for event ${event.title}`);
@@ -125,10 +180,6 @@ const Notifications = () => {
         past.push(event);
       }
     });
-
-    console.log("Live Events:", live);
-    console.log("Upcoming Events:", upcoming);
-    console.log("Past Events:", past);
 
     setLiveEvents(live);
     setUpcomingEvents(upcoming);
@@ -269,6 +320,7 @@ const Notifications = () => {
 
         if (response.ok) {
           console.log("Points updated successfully");
+          Alert.alert("Success", "Photo submitted successfully!");
         } else {
           console.error("Error updating points", response.status);
         }
@@ -280,6 +332,42 @@ const Notifications = () => {
     }
   };
 
+  const handlePress = async (event: Event) => {
+    setCurrentEvent(event);
+    console.log("Event Pressed:", event);
+    const API_URL = process.env.EXPO_PUBLIC_EVENT_API_URL;
+    const { jwtToken } = await getTokens();
+    try {
+      console.log("Event ID:", event.event_id);
+      const response = await fetch(`${API_URL}/event/info`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${jwtToken}`,
+        },
+        body: JSON.stringify({
+          event_id: event.event_id,
+        }),
+      });
+
+      const data = await response.json();
+
+      for (const key in data.event_images) {
+        console.log(key, data.event_images[key].image_link.cdnUrl);
+        setEventPhotos((prevPhotos) => ({
+          ...prevPhotos,
+          [0]: data.event_images[key].image_link.cdnUrl,
+        }));
+        console.log("Event Photos:", eventPhotos);
+      }
+
+      setModalVisible(true);
+    } catch (error) {
+      console.error("Error fetching event details:", error);
+      Alert.alert("Error", "An error occurred while fetching event details");
+    }
+  };
+
   // Function to close the camera view
   const closeCamera = () => {
     setIsCameraOpen(false);
@@ -288,6 +376,141 @@ const Notifications = () => {
 
   return (
     <SafeAreaView className="bg-neutral-100 flex-1">
+      <Modal isVisible={modalVisible}>
+        <View className="flex-1 justify-center items-center">
+          <View className="bg-white w-11/12 max-h-5/6 rounded-lg shadow-lg">
+            {/* Header */}
+            <View className="flex-row justify-between items-center border-b border-gray-200 px-4 py-3">
+              <Text className="text-xl font-semibold text-primary-600">
+                Event Details
+              </Text>
+              <TouchableOpacity onPress={() => setModalVisible(false)}>
+                <Text className="text-primary-600 font-semibold">Close</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Content */}
+            <ScrollView className="p-4">
+              {currentEvent && eventPhotos[currentEvent.event_id] ? (
+                <Image
+                  source={{ uri: eventPhotos[currentEvent.event_id] }}
+                  className="w-full h-48 rounded-md mb-4"
+                  resizeMode="cover"
+                />
+              ) : null}
+              <View className="space-y-3">
+                {/* Event Name */}
+                <View className="flex-row">
+                  <Text className="text-gray-700 font-medium w-1/3">
+                    Event Name:
+                  </Text>
+                  <Text className="text-gray-600 flex-1">
+                    {currentEvent?.title || "N/A"}
+                  </Text>
+                </View>
+
+                {/* Description */}
+                <View className="flex-row">
+                  <Text className="text-gray-700 font-medium w-1/3">
+                    Description:
+                  </Text>
+                  <Text className="text-gray-600 flex-1">
+                    {currentEvent?.description || "N/A"}
+                  </Text>
+                </View>
+
+                {/* Genre */}
+                <View className="flex-row">
+                  <Text className="text-gray-700 font-medium w-1/3">
+                    Genre:
+                  </Text>
+                  <Text className="text-gray-600 flex-1">
+                    {currentEvent?.genre || "N/A"}
+                  </Text>
+                </View>
+
+                {/* Type */}
+                <View className="flex-row">
+                  <Text className="text-gray-700 font-medium w-1/3">Type:</Text>
+                  <Text className="text-gray-600 flex-1">
+                    {currentEvent?.type || "N/A"}
+                  </Text>
+                </View>
+
+                {/* Theme */}
+                <View className="flex-row">
+                  <Text className="text-gray-700 font-medium w-1/3">
+                    Theme:
+                  </Text>
+                  <Text className="text-gray-600 flex-1">
+                    {currentEvent?.theme || "N/A"}
+                  </Text>
+                </View>
+
+                {/* Address */}
+                <View className="flex-row">
+                  <Text className="text-gray-700 font-medium w-1/3">
+                    Address:
+                  </Text>
+                  <Text className="text-gray-600 flex-1">
+                    {currentEvent?.address || "N/A"}
+                  </Text>
+                </View>
+
+                {/* Start Time */}
+                <View className="flex-row">
+                  <Text className="text-gray-700 font-medium w-1/3">
+                    Start Time:
+                  </Text>
+                  <Text className="text-gray-600 flex-1">
+                    {currentEvent?.startingAt || "N/A"}
+                  </Text>
+                </View>
+
+                {/* End Time */}
+                <View className="flex-row">
+                  <Text className="text-gray-700 font-medium w-1/3">
+                    End Time:
+                  </Text>
+                  <Text className="text-gray-600 flex-1">
+                    {currentEvent?.endingAt || "N/A"}
+                  </Text>
+                </View>
+
+                {/* Location */}
+                <View className="flex-row">
+                  <Text className="text-gray-700 font-medium w-1/3">
+                    Location:
+                  </Text>
+                  <Text className="text-gray-600 flex-1">
+                    {currentEvent
+                      ? `${currentEvent.latitude}, ${currentEvent.longitude}`
+                      : "N/A"}
+                  </Text>
+                </View>
+
+                {/* Event ID */}
+                <View className="flex-row">
+                  <Text className="text-gray-700 font-medium w-1/3">
+                    Event ID:
+                  </Text>
+                  <Text className="text-gray-600 flex-1">
+                    {currentEvent?.event_id || "N/A"}
+                  </Text>
+                </View>
+              </View>
+            </ScrollView>
+
+            {/* Footer */}
+            <TouchableOpacity
+              className="bg-primary-600 rounded-b-lg py-3 items-center"
+              onPress={() => setModalVisible(false)}
+            >
+              <Text className="text-white text-lg font-semibold">Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
       {isCameraOpen ? (
         <CameraComponent onSavePhoto={savePhoto} onCloseCamera={closeCamera} />
       ) : imageUploading ? (
@@ -332,6 +555,7 @@ const Notifications = () => {
                   <EventCard
                     event={event}
                     onCameraPress={() => handleCameraPress(event)}
+                    onCardPress={() => handlePress(event)}
                     hasPhoto={Boolean(eventPhotos[event.event_id])} // Pass if a photo exists for the event
                   />
                 </View>

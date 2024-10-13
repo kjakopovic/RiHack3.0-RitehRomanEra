@@ -12,6 +12,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { userSchema } from "@/schemas/zod-schemas";
+import { removeFirstTime } from "@/lib/secureStore";
 
 const SignUp = () => {
   // Initialize useForm with zodResolver for validation
@@ -55,6 +56,8 @@ const SignUp = () => {
 
       console.log("Response data:", responseData);
 
+      await removeFirstTime();
+
       if (router.canDismiss()) {
         router.dismissAll();
       }
@@ -80,6 +83,7 @@ const SignUp = () => {
               <TextInput
                 className="bg-primary border border-primary-80 p-2 rounded-lg w-full"
                 placeholder="First Name"
+                placeholderTextColor={"gray"}
                 onChangeText={(text) => setValue("first_name", text)}
                 {...register("first_name")}
               />
@@ -96,6 +100,7 @@ const SignUp = () => {
               <TextInput
                 className="bg-primary border border-primary-80 p-2 rounded-lg w-full"
                 placeholder="Last Name"
+                placeholderTextColor={"gray"}
                 onChangeText={(text) => setValue("last_name", text)}
                 {...register("last_name")}
               />
@@ -112,6 +117,7 @@ const SignUp = () => {
               <TextInput
                 className="bg-primary border border-primary-80 p-2 rounded-lg w-full"
                 placeholder="Age"
+                placeholderTextColor={"gray"}
                 onChangeText={(text) => setValue("age", parseInt(text))}
                 keyboardType="numeric"
                 {...register("age")}
@@ -131,6 +137,7 @@ const SignUp = () => {
                 keyboardType="email-address"
                 className="bg-primary border border-primary-80 p-2 rounded-lg w-full"
                 placeholder="Email"
+                placeholderTextColor={"gray"}
                 onChangeText={(text) => setValue("email", text)}
                 {...register("email")}
               />
@@ -147,6 +154,7 @@ const SignUp = () => {
               <TextInput
                 className="bg-primary border border-primary-80 p-2 rounded-lg w-full"
                 placeholder="Password"
+                placeholderTextColor={"gray"}
                 onChangeText={(text) => setValue("password", text)}
                 secureTextEntry={true}
                 {...register("password")}
@@ -164,6 +172,7 @@ const SignUp = () => {
               <TextInput
                 className="bg-primary border border-primary-80 p-2 rounded-lg w-full"
                 placeholder="Confirm Password"
+                placeholderTextColor={"gray"}
                 onChangeText={(text) => setValue("confirmPassword", text)}
                 secureTextEntry={true}
                 {...register("confirmPassword")}

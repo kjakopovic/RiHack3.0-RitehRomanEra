@@ -61,6 +61,14 @@ export const saveFirstTime = async () => {
   }
 };
 
+export const removeFirstTime = async () => {
+  try {
+    await SecureStore.deleteItemAsync("firstTime", undefined);
+  } catch (error) {
+    console.error("Error removing first time:", error);
+  }
+};
+
 export const getFirstTime = async () => {
   try {
     const firstTime = await SecureStore.getItemAsync("firstTime");

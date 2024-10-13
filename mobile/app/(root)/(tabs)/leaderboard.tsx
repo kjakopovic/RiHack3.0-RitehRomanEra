@@ -1,7 +1,7 @@
 // Leaderboard.tsx
 
 import React, { useEffect, useState } from "react";
-import { View, Text, FlatList, Image } from "react-native";
+import { View, Text, FlatList, Image, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 
@@ -15,38 +15,44 @@ interface User {
   points: number;
 }
 
+const users: User[] = [
+  {
+    email: " ",
+    first_name: "Marin",
+    last_name: "Mikulec",
+    points: 24,
+  },
+];
+
 const Leaderboard: React.FC = () => {
-  const [users, setUsers] = useState<User[]>([]);
+  const API_URL = process.env.EXPO_PUBLIC_USER_API_URL;
+  const fetchLeaderboard = async () => {
+    try {
+      const { jwtToken } = await getTokens();
+      const response = await fetch(`${API_URL}/user/all`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${jwtToken}`,
+        },
+      });
 
+      const data = await response.json();
+      console.log("Leaderboard data:", data);
+      // Assuming data.users is the array of users
+      // Sort users by points in descending order
+      const sortedUsers = data.users.sort(
+        (a: User, b: User) => b.points - a.points
+      );
+
+      //setUsers(sortedUsers);
+      console.log("Sorted Users:", sortedUsers);
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
   useEffect(() => {
-    const API_URL = process.env.EXPO_PUBLIC_USER_API_URL;
-    const fetchLeaderboard = async () => {
-      try {
-        const { jwtToken } = await getTokens();
-        const response = await fetch(`${API_URL}/user/all`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${jwtToken}`,
-          },
-        });
-
-        const data = await response.json();
-        console.log("Leaderboard data:", data);
-        // Assuming data.users is the array of users
-        // Sort users by points in descending order
-        const sortedUsers = data.users.sort(
-          (a: User, b: User) => b.points - a.points
-        );
-
-        setUsers(sortedUsers);
-        console.log("Sorted Users:", sortedUsers);
-      } catch (error) {
-        console.error("Error:", error);
-      }
-    };
-
-    fetchLeaderboard();
+    //fetchLeaderboard();
   }, []);
 
   const renderItem = ({ item, index }: { item: User; index: number }) => {
@@ -95,6 +101,11 @@ const Leaderboard: React.FC = () => {
         keyExtractor={(item) => item.email}
         renderItem={renderItem}
         className="px-1 pt-1"
+        ListEmptyComponent={
+          <Text className="text-lg font-bold text-center text-gray-800">
+            None of the current users have points
+          </Text>
+        }
       />
       <StatusBar style="dark" />
     </SafeAreaView>

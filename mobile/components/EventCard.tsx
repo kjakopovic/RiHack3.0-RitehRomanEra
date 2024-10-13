@@ -7,6 +7,7 @@ import {
   Image,
   Alert,
   Share,
+  Modal,
 } from "react-native";
 import React from "react";
 import { useEventStore } from "@/store/event-store"; // Adjust the import path as needed
@@ -27,15 +28,17 @@ interface EventCardProps {
     longitude: string;
     latitude: string;
     participants?: number;
-    address?: string;
+    address?: string | null;
   };
   onCameraPress?: () => void;
+  onCardPress?: () => void;
   hasPhoto: boolean;
 }
 
 const EventCard: React.FC<EventCardProps> = ({
   event,
   onCameraPress,
+  onCardPress,
   hasPhoto,
 }) => {
   const {
@@ -51,6 +54,8 @@ const EventCard: React.FC<EventCardProps> = ({
     participants,
   } = event;
   const tags = [genre, type, theme];
+
+  const [modalVisible, setModalVisible] = React.useState(false);
 
   // Format the startingAt and endingAt dates
   const formatDateTime = (isoString: string) => {
@@ -246,7 +251,10 @@ const EventCard: React.FC<EventCardProps> = ({
   };
 
   return (
-    <TouchableOpacity className="bg-neutral-100 w-[90%] rounded-xl shadow-sm shadow-neutral-80 mb-4">
+    <TouchableOpacity
+      onPress={onCardPress}
+      className="bg-neutral-100 w-[90%] rounded-xl shadow-sm shadow-neutral-80 mb-4"
+    >
       {/* Wrapper View to position the gradient over the base image */}
       <View className="relative w-full h-32 rounded-t-xl overflow-hidden">
         {/* Base Event Image */}

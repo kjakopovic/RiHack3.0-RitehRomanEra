@@ -158,7 +158,7 @@ const SignIn: React.FC = () => {
         </View>
         <View className="flex flex-row items-start justify-between w-full px-5">
           <TouchableOpacity
-            onPress={() => setShowPassword(!showPassword)}
+            onPress={() => setShowPassword(showPassword)}
             className="flex items-start justify-start"
           >
             <Text className="text-primary-80 text-base font-light mt-1">
