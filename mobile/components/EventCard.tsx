@@ -1,3 +1,5 @@
+// EventCard.tsx
+
 import {
   View,
   Text,
@@ -10,7 +12,6 @@ import React from "react";
 import { useEventStore } from "@/store/event-store"; // Adjust the import path as needed
 import * as images from "@/constants/images"; // Placeholder and gradient images
 import * as icons from "@/constants/icons"; // Calendar, share icons, etc.
-import { get } from "react-native/Libraries/TurboModule/TurboModuleRegistry";
 import { getTokens } from "@/lib/secureStore";
 
 interface EventCardProps {
@@ -25,24 +26,29 @@ interface EventCardProps {
     theme: string;
     longitude: string;
     latitude: string;
+    participants?: number;
     address?: string;
   };
   onCameraPress?: () => void;
+  hasPhoto: boolean;
 }
 
-const EventCard: React.FC<EventCardProps> = ({ event, onCameraPress }) => {
+const EventCard: React.FC<EventCardProps> = ({
+  event,
+  onCameraPress,
+  hasPhoto,
+}) => {
   const {
     event_id,
     title,
     description,
     startingAt,
     endingAt,
-    latitude,
-    longitude,
     genre,
     type,
     theme,
     address,
+    participants,
   } = event;
   const tags = [genre, type, theme];
 
@@ -77,7 +83,6 @@ const EventCard: React.FC<EventCardProps> = ({ event, onCameraPress }) => {
   // Check if the user is attending this event
   const isAttending = joinedEvents.includes(event_id);
 
-  // Function to toggle attendance
   const toggleAttendance = async () => {
     const API_URL = process.env.EXPO_PUBLIC_EVENT_API_URL;
     const POINT_URL = process.env.EXPO_PUBLIC_USER_API_URL;
@@ -304,28 +309,36 @@ const EventCard: React.FC<EventCardProps> = ({ event, onCameraPress }) => {
         </View>
 
         {/* Action Buttons */}
-        <View className="flex flex-row w-full items-center justify-end gap-x-2 mt-4">
-          {/* Camera Button */}
-          {onCameraPress && (
-            <TouchableOpacity onPress={onCameraPress} className="mt-1">
-              <Image source={icons.camera} className="h-7 w-7" />
-            </TouchableOpacity>
-          )}
-          {/* Share Button */}
-          <TouchableOpacity onPress={shareEvent}>
-            <Image source={icons.share} className="h-7 w-7" />
-          </TouchableOpacity>
-          {/* Join/Unjoin Button */}
-          <TouchableOpacity
-            className={`${
-              isAttending ? "bg-danger" : "bg-primary-0"
-            } p-2 rounded-lg w-2/6 items-center justify-center`}
-            onPress={toggleAttendance}
-          >
-            <Text className="text-sm font-bold text-white">
-              {isAttending ? "Unjoin" : "Join"}
+        <View className="flex flex-row w-full items-center justify-between mt-4">
+          {/* Participants */}
+          <View className="flex flex-row items-center gap-x-2">
+            <Text className="text-txt-200 text-sm font-medium">
+              Participants: {participants}
             </Text>
-          </TouchableOpacity>
+          </View>
+          <View className="flex flex-row w-1/2 items-center justify-center gap-x-2">
+            {/* Camera Button */}
+            {onCameraPress && !hasPhoto && (
+              <TouchableOpacity onPress={onCameraPress} className="mt-1">
+                <Image source={icons.camera} className="h-7 w-7" />
+              </TouchableOpacity>
+            )}
+            {/* Share Button */}
+            <TouchableOpacity onPress={shareEvent}>
+              <Image source={icons.share} className="h-7 w-7" />
+            </TouchableOpacity>
+            {/* Join/Unjoin Button */}
+            <TouchableOpacity
+              className={`${
+                isAttending ? "bg-danger" : "bg-primary-0"
+              } p-2 rounded-lg w-4/6 items-center justify-center mr-5`}
+              onPress={toggleAttendance}
+            >
+              <Text className="text-sm font-bold text-white">
+                {isAttending ? "Unjoin" : "Join"}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     </TouchableOpacity>

@@ -144,7 +144,7 @@ const Home = () => {
         <View className="flex flex-col items-center justify-center mt-5 pb-16">
           {/* Map over the events array and render EventCard for each event */}
           {events.map((event) => (
-            <EventCard key={event.event_id} event={event} />
+            <EventCard key={event.event_id} event={event} hasPhoto={true} />
           ))}
         </View>
       </ScrollView>

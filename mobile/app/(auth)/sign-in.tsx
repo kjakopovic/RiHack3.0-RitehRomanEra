@@ -14,6 +14,7 @@ import Modal from "react-native-modal";
 import * as icons from "@/constants/icons";
 import * as images from "@/constants/images";
 import { storeTokens } from "@/lib/secureStore";
+import { useEventStore } from "@/store/event-store";
 
 const SignIn: React.FC = () => {
   const [isModalVisible, setModalVisible] = useState<boolean>(false);
@@ -21,6 +22,7 @@ const SignIn: React.FC = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
+  const joinEvent = useEventStore((state) => state.joinEvent);
 
   const inputRefs = useRef<Array<TextInput | null>>([]); // Refs for automatically focusing on the next input
 
@@ -83,6 +85,12 @@ const SignIn: React.FC = () => {
       });
 
       const responseData = await response.json();
+      const joinedEvents = responseData.event_ids;
+
+      for (const event of joinedEvents) {
+        joinEvent(event);
+      }
+
       const jwtToken = responseData.token;
       const refreshToken = responseData.refresh_token;
 
