@@ -313,7 +313,7 @@ Resources:
             # Events table permissions
             - Effect: Allow
               Action:
-                - "dynamodb:Scan"  # Allow scan action for search
+                - "dynamodb:*"  # Allow scan action for search
               Resource: !GetAtt EventsTable.Arn
             # S3 bucket for profile pictures permissions
             - Effect: Allow
