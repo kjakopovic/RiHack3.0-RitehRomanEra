@@ -8,6 +8,7 @@ import Image from 'next/image'
 import * as Yup from 'yup'
 import { calendar, images, pin, vinyl } from '@/app/constants/images'
 import { ToastContainer, toast } from 'react-toastify';
+import CircularProgress from '@mui/joy/CircularProgress'
 const initialValues = {
     title: '',
     description: '',
@@ -293,7 +294,7 @@ interface FormData {
 const MultiStepEventForm = () => {
     const [step, setStep] = useState(1)
     const [isFormVisible, setIsFormVisible] = useState(true)
-
+    const [loading, setLoading] = useState(false)
     const handleNext = () => {
         setStep((prevStep) => prevStep + 1)
         console.log(step)
@@ -350,6 +351,7 @@ const MultiStepEventForm = () => {
         const token = localStorage.getItem('token');
         console.log(token);
         console.log(formData)
+        setLoading(true);
         try {
             const response = await fetch(
                 'https://qk7sr3c7r4.execute-api.eu-central-1.amazonaws.com/api-v1/event/register',
@@ -376,6 +378,8 @@ const MultiStepEventForm = () => {
             }
         } catch (error) {
             console.error('Error:', error)
+        } finally{
+            setLoading(false);
         }
     }
     if (!isFormVisible) return null
@@ -459,17 +463,21 @@ const MultiStepEventForm = () => {
                   <Button
                     variant="outline"
                     onClick={handleNext}
-                    type = "button"
+                    type="button"
                   >
                     Next
                   </Button>
                 ) : (
                   <Button
                     variant="outline"
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || loading}
                     type="submit"
                   >
-                    Create event
+                    {loading ? (
+                     <CircularProgress size='sm' />
+                    ) : (
+                      'Create event'
+                    )}
                   </Button>
                 )}
               </div>

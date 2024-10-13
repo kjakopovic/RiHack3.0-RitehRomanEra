@@ -23,12 +23,34 @@ const Page = () => {
     club_id: string;
   }>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [events, setEvents] = useState([]);
+ const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const {user} = useUser();
   const clubId = user.club.club_id; // Replace with your actual club ID
-
-  useEffect(() => {
+ /*  const events = [
+    {
+      title: 'Event 1',
+      description: 'Description for event 1',
+      performer: 'Performer 1',
+      startingAt: '2023-10-01',
+      endingAt: '2023-10-01',
+    },
+    {
+      title: 'Event 2',
+      description: 'Description for event 2',
+      startingAt: '2023-10-15',
+      performer: 'Performer 1',
+      endingAt: '2023-10-15',
+    },
+    {
+      title: 'Event 3',
+      description: 'Description for event 3',
+      startingAt: '2023-11-01',
+      performer: 'Performer 1',
+      endingAt: '2023-11-01',
+    },
+  ]; */
+   useEffect(() => {
     const fetchEvents = async () => {
       try {
         const response = await fetch(`https://qk7sr3c7r4.execute-api.eu-central-1.amazonaws.com/api-v1/events/club?club_id=${clubId}`, {
@@ -45,7 +67,7 @@ const Page = () => {
     };
 
     fetchEvents();
-  }, [clubId]);
+  }, [clubId]); 
 
   const handleOpenModal = (event) => {
     setSelectedEvent(event);
@@ -74,12 +96,12 @@ const Page = () => {
         onChange={handleSearchChange}
         className="mb-4 p-2 border border-gray-300 rounded"
       />
-      {loading ? (
+      {/* {loading ? (
         <div>
           <CircularProgress />
         </div>
       )
-      : ( <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      : ( */} <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredEvents.map((event, index) => (
           <Card key={index} className="bg-white shadow-md hover:shadow-lg transition-shadow duration-300">
             <CardHeader className="font-bold text-xl">{event.title}</CardHeader>
@@ -98,7 +120,7 @@ const Page = () => {
             </CardFooter>
           </Card>
         ))}
-      </div>)}
+      </div>
       
      
       {isModalOpen && selectedEvent && (
