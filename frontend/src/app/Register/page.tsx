@@ -4,7 +4,9 @@ import { Formik, Form, Field, ErrorMessage } from 'formik'
 import * as Yup from 'yup'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
-//import { logo } from '@/app/constants/images'
+import { useRouter } from 'next/navigation'
+import { logo } from '../constants/images'
+
 const StepOneSchema = Yup.object().shape({
     email: Yup.string().required('Required'),
     password: Yup.string().required('Required'),
@@ -12,13 +14,14 @@ const StepOneSchema = Yup.object().shape({
 })
 
 const StepTwoSchema = Yup.object().shape({
-    clubName: Yup.string().required('Required'),
+    club_name: Yup.string().required('Required'),
 })
 
 const StepThreeSchema = Yup.object().shape({
-    workingHours: Yup.string().required('Required'),
-    workingDays: Yup.string().required('Required'),
+    default_working_hours: Yup.string().required('Required'),
+    working_days: Yup.string().required('Required'),
 })
+ 
 
 
 
@@ -28,9 +31,11 @@ const initialValues = {
     password: '',
     confirmPassword: '',
     location: '',
-    clubName: '',
-    workingHours: '',
-    workingDays: '',
+    club_name: '',
+    default_working_hours: '',
+    working_days: '',
+    longitude: 0,
+    latitude: 0,
 }
 const StepOne = () => (
     <div>
@@ -89,18 +94,18 @@ const StepOne = () => (
 const StepTwo = () => (
     <div>
         <label
-            htmlFor="clubName"
+            htmlFor="club_name"
             className="block text-sm font-medium text-gray-700"
         >
             Club Name
         </label>
         <Field
             type="text"
-            name="clubName"
+            name="club_name"
             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
         />
         <ErrorMessage
-            name="clubName"
+            name="club_name"
             component="div"
             className="text-red-500 text-sm"
         />
@@ -108,7 +113,7 @@ const StepTwo = () => (
             htmlFor="location"
             className="block text-sm font-medium text-gray-700"
         >
-            Location
+            Adress
         </label>
         <Field
             type="text"
@@ -126,39 +131,39 @@ const StepTwo = () => (
 const StepThree = () => (
     <div>
         <label
-                htmlFor="workingDays"
+                htmlFor="working_days"
                 className="block text-sm font-medium text-gray-700"
             >
                 Working Days
             </label>
             <Field
                 as="select"
-                name="workingDays"
+                name="working_days"
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
             >
                 <option value="" disabled>Select working days</option>
-                <option value="whole_week">Whole Week</option>
-                <option value="weekend">Weekend</option>
-                <option value="week_days">Week Days</option>
+                <option value="Mon-Sun">Mon - Sun</option>
+                <option value="Fri-Sun">Fri - Sun</option>
+                <option value="Mon-Fri">Mon - Fri</option>
             </Field>
             <ErrorMessage
-                name="workingDays"
+                name="working_days"
                 component="div"
                 className="text-red-500 text-sm"
             />
         <label
-            htmlFor="workingHours"
+            htmlFor="default_working_hours"
             className="block text-sm font-medium text-gray-700"
         >
             Working hours
         </label>
         <Field
             type="text"
-            name="workingHours"
+            name="default_working_hours"
             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
         />
         <ErrorMessage
-            name="workingHours"
+            name="default_working_hours"
             component="div"
             className="text-red-500 text-sm"
         />
@@ -168,27 +173,87 @@ const StepThree = () => (
 const StepFour = () => (
     <div>
         <label
-            htmlFor="workingTime"
+            htmlFor="working_days"
             className="block text-sm font-medium text-gray-700"
         >
             Working Time
         </label>
         <Field
             type="text"
-            name="workingTime"
+            name="working_days"
             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
         />
         <ErrorMessage
-            name="workingTime"
+            name="working_days"
             component="div"
             className="text-red-500 text-sm"
         />
     </div>
 )
+interface FormData {
+    email: string;
+    password: string;
+    club_name: string;
+    longitude: number;
+    location: string;
+    latitude: number;
+    default_working_hours: string;
+    working_days: string;   
+}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 
 export default function RegisterPage() {
     const [step, setStep] = useState(1)
-
+   const router = useRouter()
+    const handleSubmit = async (values: FormData) => {
+   
+        // Construct the Geoapify URL with the address from form data
+        const geoapifyApiKey = 'd80ae4047f0749d0abcb38b1a2eba807';
+        const address = encodeURIComponent(values.location);
+        const geoapifyUrl = `https://api.geoapify.com/v1/geocode/search?text=${address}&apiKey=${geoapifyApiKey}`;
+        
+        try {
+            const response = await fetch(geoapifyUrl, {
+                method: 'GET',
+            });
+            console.log(response);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+           
+            // Extract longitude and latitude from the Geoapify response
+            const lon  = data.features[0].geometry.coordinates[0];
+            const lat = data.features[0].geometry.coordinates[1];
+            console.log('Longitude:', lon + ' Latitude:', lat);
+            const formData: FormData = {
+                email: values.email,
+                password: values.password,
+                club_name: values.club_name,
+                location: values.location,
+                longitude: lon,
+                latitude: lat,
+                default_working_hours: values.default_working_hours,
+                working_days: values.working_days,
+            };
+            console.log(formData);
+            // Send formData to your backend
+            const backendResponse = await fetch("https://zn44q04iq3.execute-api.eu-central-1.amazonaws.com/api-v1/club/register", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData),
+            });
+            if (backendResponse.ok) {
+                console.log('Success:', backendResponse);
+                
+            }
+            router.push('/');
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    };
     const handleNext = () => {
         setStep((prevStep) => prevStep + 1)
     }
@@ -205,8 +270,7 @@ export default function RegisterPage() {
                 return StepTwoSchema
             case 3:
                 return StepThreeSchema
-            case 4:
-                return StepFourSchema
+            
             default:
                 return StepOneSchema
         }
@@ -217,7 +281,7 @@ export default function RegisterPage() {
             <div className="w-full max-w-lg m-auto bg-white rounded-lg shadow-lg py-12 px-20 fixed-height">
                 <div className="text-center mb-10">
                     <Image
-                        src="/logo.png"
+                        src={logo}
                         alt="Logo"
                         className="mx-auto mb-4"
                         width={80}
@@ -230,9 +294,7 @@ export default function RegisterPage() {
                 <Formik
                     initialValues={initialValues}
                     validationSchema={validationSchema}
-                    onSubmit={(values) => {
-                        console.log(values)
-                    }}
+                    onSubmit={handleSubmit}
                 >
                     {({ isSubmitting }) => (
                         <Form className="space-y-6">
