@@ -9,7 +9,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 def lambda_handler(event, context):
-    error_response, _ = common_handler.check_is_user_authenticated_and_fetch_email_from_jwt(event)
+    error_response, email = common_handler.check_is_user_authenticated_and_fetch_email_from_jwt(event)
     
     if error_response:
         return error_response
@@ -70,6 +70,7 @@ def lambda_handler(event, context):
             'Content-Type': 'application/json'
         },
         'body': json.dumps({
-            'users': filtered_users
+            'users': filtered_users,
+            'current_user': email
         })
     }
