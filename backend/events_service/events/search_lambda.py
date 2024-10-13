@@ -134,6 +134,8 @@ def lambda_handler(event, context):
                     continue  # Skip events farther than 20 km
             filtered_events.append(event_item)
 
+        new_filtered_events = []
+
         for filt_event in filtered_events:
             event_id = filt_event.get('event_id')
             s3_client = boto3.client('s3')
@@ -141,13 +143,29 @@ def lambda_handler(event, context):
             picture = s3_client.get_object(Bucket=os.getenv('EVENT_PICTURES_BUCKET'), Key=f'{event_id}.jpg')
             logger.info(f"Picture: {picture}")
             
-            filt_event['image'] = picture['Body']
+            image = picture['Body']
+
+            new_filtered_events.append({
+                'event_id': event_id,
+                'title': event_item['Item'].get('title'),
+                'description': event_item['Item'].get('description'),
+                'startAt': event_item['Item'].get('startAt'),
+                'endingAt': event_item['Item'].get('endingAt'),
+                'theme': event_item['Item'].get('theme'),
+                'genre': event_item['Item'].get('genre'),
+                'type': event_item['Item'].get('type'),
+                'latitude': event_item['Item'].get('latitude'),
+                'longitude': event_item['Item'].get('longitude'),
+                'participants': int(event_item['Item'].get('participants', 0)),
+                'image': image,
+                'club_id': event_item['Item'].get('club_id')
+            })
 
         return {
             'statusCode': 200,
             'headers': {'Content-Type': 'application/json'},
             'body': json.dumps({
-                'events': filtered_events,
+                'events': new_filtered_events,
                 'message': 'Search completed successfully.'
             }, default=str)
         }
