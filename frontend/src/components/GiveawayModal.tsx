@@ -29,25 +29,9 @@ const GiveawayModal: React.FC<GiveawayModalProps> = ({ giveaway, onClose }) => {
   const [isWinnerModalOpen, setIsWinnerModalOpen] = useState(false);
   const [winner, setWinner] = useState('');
   const handleSelectWinner = async () => {
-    try {
-      const response = await fetch(`https://your-api-endpoint.com/api/v1/giveaway/winner?id=${giveaway.id}`, { // adjust id here leter 
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + localStorage.getItem('token'),
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      setWinner(data.winner);
-      setIsWinnerModalOpen(true);
-    } catch (error) {
-      console.error('Error fetching winner:', error);
-    }
+    const winnerIndex = Math.floor(Math.random() * giveaway.users.length);
+    setWinner(giveaway.users[winnerIndex]);
+    setIsWinnerModalOpen(true);
   };
 
   const handleCloseWinnerModal = () => {

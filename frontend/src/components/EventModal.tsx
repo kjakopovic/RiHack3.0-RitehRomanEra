@@ -72,8 +72,8 @@ const EventModal: React.FC<EventModalProps> = ({ event, onClose }) => {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-        {imageUrl ? <Image src={imageUrl} alt="Event" width = { 24} height= {24}/> : <p>Loading image...</p>}
-  <p> {event.performers}</p>
+        <Image src={images} alt="event" width={400} height={150} />
+  <p className=' flex justify-center items-center text-lg'> <strong >Performing: </strong> {event.performers}</p>
   <p className='flex justify-center items-center'>{event.description}</p>
   <div className="flex flex-wrap gap-2">
     <span className="inline-block bg-blue-100 text-blue-800 text-sm font-semibold mr-2 px-2.5 py-0.5 rounded">
@@ -87,7 +87,7 @@ const EventModal: React.FC<EventModalProps> = ({ event, onClose }) => {
     </span>
   </div>
   <div>
-    <p className="text-sm text-gray-500">Participants: {event.participants}</p>
+    <p className="text-sm text-gray-500">Participants: {event.participants || 55} </p>
   </div>
   
  

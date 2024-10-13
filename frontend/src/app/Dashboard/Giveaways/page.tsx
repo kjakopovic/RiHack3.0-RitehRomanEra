@@ -5,29 +5,44 @@ import GiveawayModal from '../../../components/GiveawayModal'; // Adjust the imp
 import { Button } from '@/components/ui/button'; // Adjust the import path as necessary
 import CircularProgress from '@mui/joy/CircularProgress';
 
-/* const Giveaways = [
+const Giveaways = [
   {
-    title: 'Giveaways 1',
-    description: 'Description for event 1',
-    date: '2023-10-01',
-    prize: 'Prize 1',
-    participants: ['Participant 1', 'Participant 2', 'Participant 3'],
-  },
-  {
-    title: 'Giveaways 2',
-    description: 'Description for event 2',
-    date: '2023-10-15',
-    prize: 'Prize 1',
-    participants: ['Participant 1', 'Participant 2', 'Participant 3'],
-  },
-  {
-    title: 'Giveaways 3',
-    description: 'Description for event 3',
+    title: 'Giveaway 1',
+    description: 'Exciting giveaway with cool prizes!',
     date: '2023-11-01',
-    prize: 'Prize 1',
-    participants: ['Participant 1', 'Participant 2', 'Participant 3'],
+    prize: 'Amazon Gift Card',
+    participants: ['Ivan Horvat', 'Ana Kovač', 'Marko Jurić'],
   },
-]; */
+  {
+    title: 'Giveaway 2',
+    description: 'Chance to win an exclusive VIP ticket!',
+    date: '2023-11-05',
+    prize: 'VIP Concert Ticket',
+    participants: ['Marija Novak', 'Luka Petrović', 'Ivana Marinković'],
+  },
+  {
+    title: 'Giveaway 3',
+    description: 'Enter to win a year\'s subscription to our service!',
+    date: '2023-11-10',
+    prize: '1 Year Subscription',
+    participants: ['Karlo Mihaljević', 'Tomislav Pavlović', 'Josip Babić'],
+  },
+  {
+    title: 'Giveaway 4',
+    description: 'Exclusive gadgets and tech accessories up for grabs!',
+    date: '2023-11-15',
+    prize: 'Smartwatch',
+    participants: ['Ivana Zorić', 'Katarina Vuković', 'Petar Matić'],
+  },
+  {
+    title: 'Giveaway 5',
+    description: 'Win a deluxe spa weekend getaway!',
+    date: '2023-11-20',
+    prize: 'Spa Weekend Package',
+    participants: ['Nikolina Kralj', 'Matej Radić', 'Marin Lovrić'],
+  }
+];
+
 
 const Page = () => {
   
@@ -45,7 +60,7 @@ const Page = () => {
   const [giveaways, setGiveaways] = useState([]);
   const [loading, setLoading] = useState(true); // Add loading state
   const token = localStorage.getItem('token');
-  useEffect(() => {
+  /* useEffect(() => {
     const fetchEvents = async () => {
       try {
         const response = await fetch(`https://qk7sr3c7r4.execute-api.eu-central-1.amazonaws.com/api-v1/events/giveaway`, {
@@ -65,7 +80,7 @@ const Page = () => {
     };
   
     fetchEvents();
-  }, []);
+  }, []); */
   const openModal = (giveaway: { title: string; description: string; date: string; prize: string; participants: string[] }) => {
       setSelectedGiveaway({
           name: giveaway.title,
@@ -84,11 +99,8 @@ const Page = () => {
 
   return (
     <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {
-        loading ? (<div className=' flex justify-center items-center'>
-          <CircularProgress />
-        </div>) : (
-          giveaways.map((giveaways, index) => (
+      
+        {  Giveaways.map((giveaways, index) => (
             <Card key={index} className="bg-white shadow-md hover:shadow-lg transition-shadow duration-300">
               <CardHeader className="font-bold text-xl">{giveaways.title}</CardHeader>
               <CardContent>
@@ -101,9 +113,9 @@ const Page = () => {
                 </Button>
               </CardFooter>
             </Card>
-          ))
-        )
-      }
+          ))}
+        
+      
       
      
       {isModalOpen && selectedGiveaway && (
