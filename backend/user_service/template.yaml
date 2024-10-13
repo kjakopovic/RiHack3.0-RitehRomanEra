@@ -728,10 +728,7 @@ Resources:
             # Users table permissions
             - Effect: Allow
               Action:
-                - "dynamodb:PutItem"
-                - "dynamodb:DeleteItem"
-                - "dynamodb:GetItem"
-                - "dynamodb:UpdateItem"
+                - "dynamodb:*"
               Resource: !GetAtt UsersTable.Arn
             # Secrets Manager for jwt secret permissions
             - Effect: Allow
