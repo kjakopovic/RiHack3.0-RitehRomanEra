@@ -41,11 +41,9 @@ def lambda_handler(event, context):
 
         logger.info(f"GET USERS PRIVATE INFO - Found {users} users.")
 
-        sorted_users = sorted(users, key=lambda user: user.get('points', 0), reverse=True)
-
         filtered_users = []
-
-        for user in sorted_users:
+        
+        for user in users:
             filtered_users.append({
                 'email': user['email'],
                 'points': user['points'],
