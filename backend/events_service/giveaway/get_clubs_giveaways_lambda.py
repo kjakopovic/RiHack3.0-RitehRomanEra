@@ -45,6 +45,17 @@ def lambda_handler(event, context):
 
             logger.info(f"Giveaway ids: {giveaway_ids}")
 
+            if not giveaway_ids:
+                return {
+                    'statusCode': 200,
+                    'headers': {
+                        'Content-Type': 'application/json'
+                    },
+                    'body': json.dumps({
+                        'message': 'No giveaways found for this club'
+                    })
+                }
+
             events = []
 
             for id in giveaway_ids:
