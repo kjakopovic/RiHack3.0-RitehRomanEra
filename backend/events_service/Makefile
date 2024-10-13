@@ -35,3 +35,6 @@ build-GetEventInfoFunction:
 
 build-GetClubsEventsFunction:
 	$(MAKE) build LAMBDA_FILE=events/get_clubs_events_lambda.py ARTIFACTS_DIR=$(ARTIFACTS_DIR)
+
+build-GetClubsGiveawaysFunction:
+	$(MAKE) build LAMBDA_FILE=giveaway/get_clubs_giveaways_lambda.py ARTIFACTS_DIR=$(ARTIFACTS_DIR)

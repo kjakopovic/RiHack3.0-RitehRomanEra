@@ -3,25 +3,28 @@ import logging
 import boto3
 import os
 
+import backend.common.common as common_handler
+
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 def lambda_handler(event, context):
     try:
-        query_params = event.get('queryStringParameters', {}) or {}
-
-        club_id = query_params.get('club_id')
+        error_response, email = common_handler.check_is_user_authenticated_and_fetch_email_from_jwt(event)
+    
+        if error_response:
+            return error_response
 
         # Initialize a DynamoDB resource
         dynamodb = boto3.resource('dynamodb')
         clubs_table = dynamodb.Table(os.getenv('CLUBS_TABLE_NAME'))
-        events_table = dynamodb.Table(os.getenv('EVENTS_TABLE_NAME'))
+        giveaways_table = dynamodb.Table(os.getenv('GIVEAWAYS_TABLE_NAME'))
 
         # get item from the DynamoDB table
         try:
             club_item = clubs_table.get_item(
                 Key={
-                    'club_id': club_id
+                    'club_id': email
                 }
             )
 
@@ -36,20 +39,19 @@ def lambda_handler(event, context):
                     })
                 }
             
-            event_ids = club_item['Item'].get('events', [])
+            giveaway_ids = club_item['Item'].get('giveaways', [])
 
             events = []
 
-            for id in event_ids:
-                event_item = events_table.get_item(
+            for id in giveaway_ids:
+                giveaway_item = giveaways_table.get_item(
                     Key={
-                        'event_id': id
+                        'giveaway_id': id
                     }
                 )
 
-                if 'Item' in event_item:
-                    event_item['Item']['participants'] = int(event_item['Item']['participants'])
-                    events.append(event_item['Item'])
+                if 'Item' in giveaway_item:
+                    events.append(giveaway_item['Item'])
         except Exception as e:
             logger.error(f'Error saving event to DynamoDB: {str(e)}')
 
@@ -69,7 +71,7 @@ def lambda_handler(event, context):
                 'Content-Type': 'application/json'
             },
             'body': json.dumps({
-                'message': 'Got clubs events',
+                'message': 'Got users events!',
                 'events': events
             })
         }

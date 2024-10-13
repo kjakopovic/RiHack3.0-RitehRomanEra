@@ -543,7 +543,7 @@ Resources:
               Action:
                 - "dynamodb:*"
               Resource: !GetAtt EventsTable.Arn
-            # Users table permissions
+            # Clubs table permissions
             - Effect: Allow
               Action:
                 - "dynamodb:*"
@@ -558,6 +558,48 @@ Resources:
           Type: HttpApi
           Properties:
             Path: /events/club
+            Method: GET
+            ApiId: !Ref EventsServiceApi
+
+  GetClubsGiveawaysFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      CodeUri: ./
+      Handler: get_clubs_giveaways_lambda.lambda_handler
+      Runtime: python3.12
+      Environment:
+        Variables:
+          GIVEAWAY_TABLE_NAME: !Ref GiveawayTable
+          CLUBS_TABLE_NAME: !ImportValue club-service-ClubsTableName
+          JWT_SECRET_NAME: !Ref JwtSecretName
+          SECRETS_REGION_NAME: !Ref SecretsRegionName
+      Architectures:
+        - x86_64
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            # Giveaway table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:*"
+              Resource: !GetAtt GiveawayTable.Arn
+            # Clubs table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:*"
+              Resource: !ImportValue club-service-ClubsTableArn
+            # Secrets Manager for jwt secret permissions
+            - Effect: Allow
+              Action:
+                - secretsmanager:GetSecretValue
+              Resource: !Ref JwtSecretArn
+      Events:
+        GetClubsGiveawaysEndpoint:
+          Type: HttpApi
+          Properties:
+            Path: /events/giveaway
             Method: GET
             ApiId: !Ref EventsServiceApi
 
