@@ -17,7 +17,7 @@ def lambda_handler(event, context):
         clubs_table = dynamodb.Table(os.getenv('CLUBS_TABLE_NAME'))
         events_table = dynamodb.Table(os.getenv('EVENTS_TABLE_NAME'))
 
-        # get item from the DynamoDB table
+        # get item from the DynamoDB table 
         try:
             club_item = clubs_table.get_item(
                 Key={
