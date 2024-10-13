@@ -3,7 +3,7 @@ import logging
 import boto3
 import os
 import decimal  # Import the decimal module
-from boto3.dynamodb.conditions import Key
+from boto3.dynamodb.conditions import Key,Attr
 import backend.common.common as common_handler
 
 logger = logging.getLogger()
@@ -64,15 +64,13 @@ def lambda_handler(event, context):
         # Fetch event images
         # Assuming 'event_id' is a Global Secondary Index (GSI) on the event_images_table
         try:
-            images_response = event_images_table.query(
-                IndexName='event_id-index',
-                KeyConditionExpression=Key('event_id').eq(event_id)
+            images_response = event_images_table.scan(
+                FilterExpression=Attr('event_id').eq(event_id)
             )
             event_images = images_response.get('Items', [])
         except Exception as e:
             logger.error(f'Error fetching event images: {str(e)}')
             event_images = []
-
         # Prepare the response
         response_body = {
             'event_info': event_info,

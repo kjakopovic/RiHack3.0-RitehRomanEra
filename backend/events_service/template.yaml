@@ -451,8 +451,12 @@ Resources:
             # Events table permissions
             - Effect: Allow
               Action:
-                - "dynamodb:GetItem"
+                - "dynamodb:*"
               Resource: !GetAtt EventsTable.Arn
+            - Effect: Allow
+              Action:
+                - "dynamodb:*"
+              Resource: !GetAtt EventImagesTable.Arn
             # EventImages table permissions
             - Effect: Allow
               Action:
