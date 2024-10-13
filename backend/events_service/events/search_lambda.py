@@ -134,6 +134,15 @@ def lambda_handler(event, context):
                     continue  # Skip events farther than 20 km
             filtered_events.append(event_item)
 
+        for filt_event in filtered_events:
+            event_id = filt_event.get('event_id')
+            s3_client = boto3.client('s3')
+
+            picture = s3_client.get_object(Bucket=os.getenv('EVENT_PICTURES_BUCKET'), Key=f'{event_id}.jpg')
+            logger.info(f"Picture: {picture}")
+            
+            filt_event['image'] = picture['Body']
+
         return {
             'statusCode': 200,
             'headers': {'Content-Type': 'application/json'},

@@ -154,7 +154,7 @@ Resources:
             # S3 bucket for profile pictures permissions
             - Effect: Allow
               Action:
-                - "s3:PutObject"
+                - "s3:*"
               Resource: !Ref EventPicturesBucketArn
       Events:
         RegisterEventEndpoint:
@@ -304,6 +304,7 @@ Resources:
       Environment:
         Variables:
           EVENTS_TABLE_NAME: !Ref EventsTable
+          EVENT_PICTURES_BUCKET: !Ref EventPicturesBucket
       Architectures:
         - x86_64
       Policies:
@@ -314,6 +315,11 @@ Resources:
               Action:
                 - "dynamodb:Scan"  # Allow scan action for search
               Resource: !GetAtt EventsTable.Arn
+            # S3 bucket for profile pictures permissions
+            - Effect: Allow
+              Action:
+                - "s3:*"
+              Resource: !Ref EventPicturesBucketArn
       Events:
         SearchEventEndpoint:
           Type: HttpApi
@@ -491,6 +497,7 @@ Resources:
           USERS_TABLE_NAME: !ImportValue user-service-UsersTableName
           JWT_SECRET_NAME: !Ref JwtSecretName
           SECRETS_REGION_NAME: !Ref SecretsRegionName
+          EVENT_PICTURES_BUCKET: !Ref EventPicturesBucket
       Architectures:
         - x86_64
       Policies:
@@ -511,6 +518,11 @@ Resources:
               Action:
                 - secretsmanager:GetSecretValue
               Resource: !Ref JwtSecretArn
+            # S3 bucket for profile pictures permissions
+            - Effect: Allow
+              Action:
+                - "s3:*"
+              Resource: !Ref EventPicturesBucketArn
       Events:
         GetUsersEventsEndpoint:
           Type: HttpApi
@@ -533,6 +545,7 @@ Resources:
           CLUBS_TABLE_NAME: !ImportValue club-service-ClubsTableName
           JWT_SECRET_NAME: !Ref JwtSecretName
           SECRETS_REGION_NAME: !Ref SecretsRegionName
+          EVENT_PICTURES_BUCKET: !Ref EventPicturesBucket
       Architectures:
         - x86_64
       Policies:
@@ -553,6 +566,11 @@ Resources:
               Action:
                 - secretsmanager:GetSecretValue
               Resource: !Ref JwtSecretArn
+            # S3 bucket for profile pictures permissions
+            - Effect: Allow
+              Action:
+                - "s3:*"
+              Resource: !Ref EventPicturesBucketArn
       Events:
         GetClubsEventsEndpoint:
           Type: HttpApi

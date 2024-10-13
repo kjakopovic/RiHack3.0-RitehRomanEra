@@ -50,6 +50,15 @@ def lambda_handler(event, context):
                 if 'Item' in event_item:
                     event_item['Item']['participants'] = int(event_item['Item'].get('participants', 0))
                     events.append(event_item['Item'])
+                    
+            for currEvent in events:
+                event_id = currEvent.get('event_id')
+                s3_client = boto3.client('s3')
+
+                picture = s3_client.get_object(Bucket=os.getenv('EVENT_PICTURES_BUCKET'), Key=f'{event_id}.jpg')
+                logger.info(f"Picture: {picture}")
+                
+                currEvent['image'] = picture['Body']
         except Exception as e:
             logger.error(f'Error saving event to DynamoDB: {str(e)}')
 
