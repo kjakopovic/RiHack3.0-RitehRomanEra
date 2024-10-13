@@ -429,6 +429,50 @@ Resources:
             Method: POST
             ApiId: !Ref EventsServiceApi
 
+  GetEventInfoFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      CodeUri: ./
+      Handler: event_info.lambda_handler
+      Runtime: python3.12
+      Environment:
+        Variables:
+          EVENTS_TABLE_NAME: !Ref EventsTable
+          EVENT_IMAGES_TABLE_NAME: !Ref EventImagesTable
+          JWT_SECRET_NAME: !Ref JwtSecretName
+          SECRETS_REGION_NAME: !Ref SecretsRegionName
+      Architectures:
+        - x86_64
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            # Events table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:GetItem"
+              Resource: !GetAtt EventsTable.Arn
+            # EventImages table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:Query"
+              Resource:
+                - !GetAtt EventImagesTable.Arn
+                - !Sub "${EventImagesTable.Arn}/index/event_id-index"
+            # Secrets Manager for JWT secret permissions
+            - Effect: Allow
+              Action:
+                - "secretsmanager:GetSecretValue"
+              Resource: !Ref JwtSecretArn
+      Events:
+        GetEventInfoEndpoint:
+          Type: HttpApi
+          Properties:
+            Path: /event/info
+            Method: ANY
+            ApiId: !Ref EventsServiceApi
+
   GetUsersEventsFunction:
     Type: AWS::Serverless::Function
     Metadata:
