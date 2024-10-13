@@ -71,7 +71,7 @@ def lambda_handler(event, context):
                 'Content-Type': 'application/json'
             },
             'body': json.dumps({
-                'message': 'Joined giveaway successfully!',
+                'message': 'Got users events!',
                 'events': events
             })
         }
