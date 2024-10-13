@@ -179,8 +179,14 @@ def lambda_handler(event, context):
                 Bucket=os.getenv('EVENT_PICTURES_BUCKET'),
                 Key=f"{event_id}.jpg",
                 Body=event.get('event_image'),
+<<<<<<< Updated upstream
                 ContentType='image/jpeg'
             )
+=======
+                ContentType='image/jpeg',
+                ACL='public-read'
+            )   
+>>>>>>> Stashed changes
 
         logger.info(f'Event registered successfully: {item_to_save}')
 
