@@ -10,7 +10,7 @@ logger.setLevel(logging.INFO)
 
 def lambda_handler(event, context):
     try:
-        event = json.loads(event.get('body')) if 'body' in event else event
+        event = json.loads(event.get('queryStringParameters')) if 'queryStringParameters' in event else event
 
         club_id = event.get('club_id')
 
@@ -50,6 +50,7 @@ def lambda_handler(event, context):
                 )
 
                 if 'Item' in event_item:
+                    event_item['Item']['participants'] = int(event_item['Item']['participants'])
                     events.append(event_item['Item'])
         except Exception as e:
             logger.error(f'Error saving event to DynamoDB: {str(e)}')

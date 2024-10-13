@@ -51,6 +51,7 @@ def lambda_handler(event, context):
                 )
 
                 if 'Item' in event_item:
+                    event_item['Item']['participants'] = int(event_item['Item']['participants'])
                     events.append(event_item['Item'])
         except Exception as e:
             logger.error(f'Error saving event to DynamoDB: {str(e)}')
