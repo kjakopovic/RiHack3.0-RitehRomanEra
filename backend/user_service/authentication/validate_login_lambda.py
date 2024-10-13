@@ -107,6 +107,7 @@ def lambda_handler(event, context):
         'body': json.dumps({
             'message': 'Logged in successfully, welcome!',
             'token': access_token,
-            'refresh_token': refresh_token
+            'refresh_token': refresh_token,
+            'event_ids': response.get('Item').get('events', [])
         })
     }
