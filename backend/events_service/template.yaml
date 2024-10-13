@@ -102,8 +102,8 @@ Resources:
       ProvisionedThroughput:
         ReadCapacityUnits: 5
         WriteCapacityUnits: 5
-  # Lambda Functions
 
+  # Lambda Functions
   RegisterEventFunction:
     Type: AWS::Serverless::Function
     Metadata:
@@ -427,6 +427,41 @@ Resources:
           Properties:
             Path: /event/image
             Method: POST
+            ApiId: !Ref EventsServiceApi
+
+  GetUsersEventsFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      CodeUri: ./
+      Handler: get_users_events_lambda.lambda_handler
+      Runtime: python3.12
+      Environment:
+        Variables:
+          EVENTS_TABLE_NAME: !Ref EventsTable
+          USERS_TABLE_NAME: !ImportValue user-service-UsersTableName
+      Architectures:
+        - x86_64
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            # Events table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:*"
+              Resource: !GetAtt EventsTable.Arn
+            # Users table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:*"
+              Resource: !ImportValue user-service-UsersTableArn
+      Events:
+        GetUsersEventsEndpoint:
+          Type: HttpApi
+          Properties:
+            Path: /events/user
+            Method: GET
             ApiId: !Ref EventsServiceApi
 
 Outputs:

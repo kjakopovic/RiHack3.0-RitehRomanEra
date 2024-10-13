@@ -26,3 +26,7 @@ build-JoinGiveawayFunction:
 
 build-SaveEventImageFunction:
 	$(MAKE) build LAMBDA_FILE=events/event_image_lambda.py ARTIFACTS_DIR=$(ARTIFACTS_DIR)
+
+build-GetUsersEventsFunction:
+	$(MAKE) build LAMBDA_FILE=events/get_users_events_lambda.py ARTIFACTS_DIR=$(ARTIFACTS_DIR)
+	
