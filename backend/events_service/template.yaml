@@ -372,6 +372,63 @@ Resources:
             Method: GET
             ApiId: !Ref EventsServiceApi
 
+  EventImagesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: event_images
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+
+  SaveEventImageFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      CodeUri: ./
+      Handler: event_image_lambda.lambda_handler
+      Runtime: python3.12
+      Environment:
+        Variables:
+          EVENT_IMAGES_TABLE_NAME: !Ref EventImagesTable
+          USERS_TABLE_NAME: !ImportValue user-service-UsersTableName
+          JWT_SECRET_NAME: !Ref JwtSecretName
+          SECRETS_REGION_NAME: !Ref SecretsRegionName
+      Architectures:
+        - x86_64
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            # EventImages table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:PutItem"
+                - "dynamodb:GetItem"
+              Resource: !GetAtt EventImagesTable.Arn
+            # Users table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:GetItem"
+              Resource: !ImportValue user-service-UsersTableArn
+            # Secrets Manager for JWT secret permissions
+            - Effect: Allow
+              Action:
+                - "secretsmanager:GetSecretValue"
+              Resource: !Ref JwtSecretArn
+      Events:
+        SaveEventImageEndpoint:
+          Type: HttpApi
+          Properties:
+            Path: /event/image
+            Method: POST
+            ApiId: !Ref EventsServiceApi
+
 Outputs:
   EventsTableArn:
     Description: "Events table ARN"
