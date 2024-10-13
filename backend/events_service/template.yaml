@@ -27,7 +27,7 @@ Parameters:
   EventPicturesBucketArn:
     Type: String
     Description: ARN for the S3 bucket for profile pictures
-    Default: arn:aws:s3:::rihack-event-images/*
+    Default: arn:aws:s3:::rihack-event-images/**
 
 # Global Settings
 Globals:
