@@ -23,6 +23,8 @@ def lambda_handler(event, context):
     try:
         response = users_table.scan()
 
+        logger.info(f"GET USERS PRIVATE INFO - Found {response}")
+
         # Check if user exists
         if not response.get('Items'):
             return {
@@ -36,6 +38,9 @@ def lambda_handler(event, context):
             }
         
         users = response['Items']
+
+        logger.info(f"GET USERS PRIVATE INFO - Found {users} users.")
+
         sorted_users = sorted(users, key=lambda user: user.get('points', 0), reverse=True)
 
         filtered_users = []

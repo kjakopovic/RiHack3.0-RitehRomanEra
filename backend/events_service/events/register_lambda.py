@@ -23,7 +23,7 @@ def lambda_handler(event, context):
             'title': str,
             'description': str,
             'startingAt': str,
-            'endingAt': str
+            'endingAt': str,
         }
 
         # Define the structure of the giveaway object
@@ -156,6 +156,16 @@ def lambda_handler(event, context):
                     'message': 'Failed to register event due to internal server error.'
                 })
             }
+        
+        if event.get('event_image'):
+            s3_client = boto3.client('s3')
+
+            s3_client.put_object(
+                Bucket=os.getenv('EVENT_PICTURES_BUCKET'),
+                Key=f"{event_id}.jpg",
+                Body=event.get('event_image'),
+                ContentType='image/jpeg'
+            )
 
         logger.info(f'Event registered successfully: {item_to_save}')
 
