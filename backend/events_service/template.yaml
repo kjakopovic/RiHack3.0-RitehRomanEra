@@ -429,18 +429,32 @@ Resources:
             Method: POST
             ApiId: !Ref EventsServiceApi
 
+<<<<<<< Updated upstream
   GetUsersEventsFunction:
+=======
+  GetEventInfoFunction:
+>>>>>>> Stashed changes
     Type: AWS::Serverless::Function
     Metadata:
       BuildMethod: makefile
     Properties:
       CodeUri: ./
+<<<<<<< Updated upstream
       Handler: get_users_events_lambda.lambda_handler
+=======
+      Handler: event_info.lambda_handler
+>>>>>>> Stashed changes
       Runtime: python3.12
       Environment:
         Variables:
           EVENTS_TABLE_NAME: !Ref EventsTable
+<<<<<<< Updated upstream
           USERS_TABLE_NAME: !ImportValue user-service-UsersTableName
+=======
+          EVENT_IMAGES_TABLE_NAME: !Ref EventImagesTable
+          JWT_SECRET_NAME: !Ref JwtSecretName
+          SECRETS_REGION_NAME: !Ref SecretsRegionName
+>>>>>>> Stashed changes
       Architectures:
         - x86_64
       Policies:
@@ -449,6 +463,7 @@ Resources:
             # Events table permissions
             - Effect: Allow
               Action:
+<<<<<<< Updated upstream
                 - "dynamodb:*"
               Resource: !GetAtt EventsTable.Arn
             # Users table permissions
@@ -464,6 +479,31 @@ Resources:
             Method: GET
             ApiId: !Ref EventsServiceApi
 
+=======
+                - "dynamodb:GetItem"
+              Resource: !GetAtt EventsTable.Arn
+            # EventImages table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:Query"
+              Resource:
+                - !GetAtt EventImagesTable.Arn
+                - !Sub "${EventImagesTable.Arn}/index/event_id-index"
+            # Secrets Manager for JWT secret permissions
+            - Effect: Allow
+              Action:
+                - "secretsmanager:GetSecretValue"
+              Resource: !Ref JwtSecretArn
+      Events:
+        GetEventInfoEndpoint:
+          Type: HttpApi
+          Properties:
+            Path: /event/info
+            Method: ANY
+            ApiId: !Ref EventsServiceApi
+
+
+>>>>>>> Stashed changes
 Outputs:
   EventsTableArn:
     Description: "Events table ARN"
