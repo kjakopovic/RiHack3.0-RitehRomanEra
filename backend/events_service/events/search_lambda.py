@@ -68,12 +68,24 @@ def lambda_handler(event, context):
                 })
             }
 
-    # Set default date if no date is provided
+    # Build the date range for filtering
     if not event_date:
+        # No date provided: Filter from now to 10 days from now
         current_date = datetime.now(timezone.utc)
+        current_date = current_date.replace(hour=0, minute=0, second=0, microsecond=0)
+        ten_days_from_now = current_date + timedelta(days=10)
+        ten_days_from_now.replace(hour=23, minute=59, second=59, microsecond=999999)
+        start_date_str = current_date.isoformat()
+        end_date_str = ten_days_from_now.isoformat()
     else:
         try:
-            current_date = datetime.strptime(event_date, '%Y-%m-%dT%H:%M:%S')
+            # Parse the provided date
+            event_date_parsed = datetime.strptime(event_date, '%Y-%m-%dT%H:%M:%S')
+            # Get the start and end of the day
+            start_of_day = event_date_parsed.replace(hour=0, minute=0, second=0, microsecond=0)
+            end_of_day = event_date_parsed.replace(hour=23, minute=59, second=59, microsecond=999999)
+            start_date_str = start_of_day.isoformat()
+            end_date_str = end_of_day.isoformat()
         except ValueError as e:
             # Return an error response if date format is incorrect
             logger.error(f"Invalid date format: {str(e)}")
@@ -133,15 +145,6 @@ def lambda_handler(event, context):
                 if distance > 20:
                     continue  # Skip events farther than 20 km
             filtered_events.append(event_item)
-
-        for filt_event in filtered_events:
-            event_id = filt_event.get('event_id')
-            s3_client = boto3.client('s3')
-
-            picture = s3_client.get_object(Bucket=os.getenv('EVENT_PICTURES_BUCKET'), Key=f'{event_id}.jpg')
-            logger.info(f"Picture: {picture}")
-            
-            filt_event['image'] = picture['Body']
 
         return {
             'statusCode': 200,
