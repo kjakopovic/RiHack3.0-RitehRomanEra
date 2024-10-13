@@ -93,6 +93,7 @@ def lambda_handler(event, context):
 
         # Generate a unique event ID
         event_id = str(uuid.uuid4())
+        giveaway_id = str(uuid.uuid4())
         logger.info(f'Generated event ID: {event_id}')
 
         dynamodb = boto3.resource('dynamodb')
@@ -137,7 +138,7 @@ def lambda_handler(event, context):
             events_table.put_item(Item=item_to_save)
 
             giveaway_table.put_item(Item={
-                'giveaway_id': str(uuid.uuid4()),
+                'giveaway_id': giveaway_id,
                 'event_id': event_id,
                 'prize': event['giveaway']['prize'],
                 'description': event['giveaway']['description'],
@@ -145,6 +146,20 @@ def lambda_handler(event, context):
                 'users': [],
                 'entries': []
             })
+
+            giveaways = [club_info.get('giveaways', []).append(giveaway_id)]
+            events = [club_info.get('events', []).append(event_id)]
+
+            clubs_table.update_item(
+                Key={
+                    'club_id': email
+                },
+                UpdateExpression='SET giveaways = :giveaways, events = :events',
+                ExpressionAttributeValues={
+                    ':giveaways': giveaways,
+                    ':events': events
+                }
+            )
         except Exception as e:
             logger.error(f'Error saving event to DynamoDB: {str(e)}')
             return {
