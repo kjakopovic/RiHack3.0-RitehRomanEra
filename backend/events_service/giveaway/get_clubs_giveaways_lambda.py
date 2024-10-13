@@ -18,7 +18,7 @@ def lambda_handler(event, context):
         # Initialize a DynamoDB resource
         dynamodb = boto3.resource('dynamodb')
         clubs_table = dynamodb.Table(os.getenv('CLUBS_TABLE_NAME'))
-        giveaways_table = dynamodb.Table(os.getenv('GIVEAWAYS_TABLE_NAME'))
+        giveaways_table = dynamodb.Table(os.getenv('GIVEAWAY_TABLE_NAME'))
 
         # get item from the DynamoDB table
         try:
