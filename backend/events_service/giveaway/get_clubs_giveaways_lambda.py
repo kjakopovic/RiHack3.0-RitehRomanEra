@@ -66,8 +66,14 @@ def lambda_handler(event, context):
                 )
 
                 if 'Item' in giveaway_item:
-                    logger.info(f"Giveaway item: {giveaway_item['Item']}")
-                    events.append(giveaway_item['Item'])
+                    events.append({
+                        'giveaway_id': id,
+                        'title': giveaway_item['Item'].get('title'),
+                        'description': giveaway_item['Item'].get('description'),
+                        'prize': giveaway_item['Item'].get('prize'),
+                        'entries': giveaway_item['Item'].get('entries'),
+                        'users': giveaway_item['Item'].get('users')
+                    })
         except Exception as e:
             logger.error(f'Error saving event to DynamoDB: {str(e)}')
 

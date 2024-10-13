@@ -48,17 +48,29 @@ def lambda_handler(event, context):
                 )
 
                 if 'Item' in event_item:
-                    event_item['Item']['participants'] = int(event_item['Item'].get('participants', 0))
-                    events.append(event_item['Item'])
-                    
-            for currEvent in events:
-                event_id = currEvent.get('event_id')
-                s3_client = boto3.client('s3')
+                    event_id = id
+                    s3_client = boto3.client('s3')
 
-                picture = s3_client.get_object(Bucket=os.getenv('EVENT_PICTURES_BUCKET'), Key=f'{event_id}.jpg')
-                logger.info(f"Picture: {picture}")
-                
-                currEvent['image'] = picture['Body']
+                    picture = s3_client.get_object(Bucket=os.getenv('EVENT_PICTURES_BUCKET'), Key=f'{event_id}.jpg')
+                    logger.info(f"Picture: {picture}")
+                    
+                    image = picture['Body']
+
+                    events.append({
+                        'event_id': event_id,
+                        'title': event_item['Item'].get('title'),
+                        'description': event_item['Item'].get('description'),
+                        'startAt': event_item['Item'].get('startAt'),
+                        'endingAt': event_item['Item'].get('endingAt'),
+                        'theme': event_item['Item'].get('theme'),
+                        'genre': event_item['Item'].get('genre'),
+                        'type': event_item['Item'].get('type'),
+                        'latitude': event_item['Item'].get('latitude'),
+                        'longitude': event_item['Item'].get('longitude'),
+                        'participants': int(event_item['Item'].get('participants', 0)),
+                        'image': image,
+                        'club_id': event_item['Item'].get('club_id')
+                    })
         except Exception as e:
             logger.error(f'Error saving event to DynamoDB: {str(e)}')
 
