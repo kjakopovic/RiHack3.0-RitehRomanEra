@@ -89,6 +89,19 @@ Resources:
         ReadCapacityUnits: 5
         WriteCapacityUnits: 5
 
+  EventImagesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: event_images
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
   # Lambda Functions
 
   RegisterEventFunction:
