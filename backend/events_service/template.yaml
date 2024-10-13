@@ -485,6 +485,8 @@ Resources:
         Variables:
           EVENTS_TABLE_NAME: !Ref EventsTable
           USERS_TABLE_NAME: !ImportValue user-service-UsersTableName
+          JWT_SECRET_NAME: !Ref JwtSecretName
+          SECRETS_REGION_NAME: !Ref SecretsRegionName
       Architectures:
         - x86_64
       Policies:
@@ -500,6 +502,11 @@ Resources:
               Action:
                 - "dynamodb:*"
               Resource: !ImportValue user-service-UsersTableArn
+            # Secrets Manager for jwt secret permissions
+            - Effect: Allow
+              Action:
+                - secretsmanager:GetSecretValue
+              Resource: !Ref JwtSecretArn
       Events:
         GetUsersEventsEndpoint:
           Type: HttpApi
@@ -520,6 +527,8 @@ Resources:
         Variables:
           EVENTS_TABLE_NAME: !Ref EventsTable
           CLUBS_TABLE_NAME: !ImportValue club-service-ClubsTableName
+          JWT_SECRET_NAME: !Ref JwtSecretName
+          SECRETS_REGION_NAME: !Ref SecretsRegionName
       Architectures:
         - x86_64
       Policies:
@@ -535,6 +544,11 @@ Resources:
               Action:
                 - "dynamodb:*"
               Resource: !ImportValue club-service-ClubsTableArn
+            # Secrets Manager for jwt secret permissions
+            - Effect: Allow
+              Action:
+                - secretsmanager:GetSecretValue
+              Resource: !Ref JwtSecretArn
       Events:
         GetClubsEventsEndpoint:
           Type: HttpApi
