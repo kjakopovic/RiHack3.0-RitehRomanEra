@@ -320,6 +320,11 @@ Resources:
               Action:
                 - "s3:*"
               Resource: !Ref EventPicturesBucketArn
+            # S3 bucket for profile pictures permissions
+            - Effect: Allow
+              Action:
+                - "s3:*"
+              Resource: arn:aws:s3:::rihack-event-images
       Events:
         SearchEventEndpoint:
           Type: HttpApi
