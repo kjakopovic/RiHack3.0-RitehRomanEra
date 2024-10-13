@@ -514,7 +514,7 @@ Resources:
       BuildMethod: makefile
     Properties:
       CodeUri: ./
-      Handler: get_users_events_lambda.lambda_handler
+      Handler: get_clubs_events_lambda.lambda_handler
       Runtime: python3.12
       Environment:
         Variables:
