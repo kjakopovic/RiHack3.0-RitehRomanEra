@@ -464,6 +464,41 @@ Resources:
             Method: GET
             ApiId: !Ref EventsServiceApi
 
+  GetClubsEventsFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      CodeUri: ./
+      Handler: get_users_events_lambda.lambda_handler
+      Runtime: python3.12
+      Environment:
+        Variables:
+          EVENTS_TABLE_NAME: !Ref EventsTable
+          CLUBS_TABLE_NAME: !ImportValue club-service-ClubsTableName
+      Architectures:
+        - x86_64
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            # Events table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:*"
+              Resource: !GetAtt EventsTable.Arn
+            # Users table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:*"
+              Resource: !ImportValue user-service-ClubsTableArn
+      Events:
+        GetClubsEventsEndpoint:
+          Type: HttpApi
+          Properties:
+            Path: /events/club
+            Method: GET
+            ApiId: !Ref EventsServiceApi
+
 Outputs:
   EventsTableArn:
     Description: "Events table ARN"
