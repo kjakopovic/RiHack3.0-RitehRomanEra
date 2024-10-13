@@ -2,6 +2,7 @@ import json
 import logging
 import boto3
 import os
+import base64
 from boto3.dynamodb.conditions import Attr
 from datetime import datetime, timedelta, timezone
 from math import radians, sin, cos, sqrt, atan2
@@ -169,7 +170,7 @@ def lambda_handler(event, context):
                 'latitude': event_item['Item'].get('latitude'),
                 'longitude': event_item['Item'].get('longitude'),
                 'participants': int(event_item['Item'].get('participants', 0)),
-                'image': image,
+                'image': base64.b64encode(image).decode('utf-8'),
                 'club_id': event_item['Item'].get('club_id')
             })
 
