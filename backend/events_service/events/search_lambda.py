@@ -98,10 +98,20 @@ def lambda_handler(event, context):
                 })
             }
 
-    try:
-        response = events_table.scan()
+    ten_days_from_now = current_date + timedelta(days=10)
+    current_date_str = int(current_date)
+    ten_days_from_now_str = int(ten_days_from_now)
 
-        events = response.get('Items', [])
+    # Build the filter expression for DynamoDB query (only date range)
+    filter_expression = Attr('startingAt').between(current_date_str, ten_days_from_now_str)
+
+    try:
+        # Query DynamoDB with pagination handling
+        events = []
+        scan_kwargs = {'FilterExpression': filter_expression}
+
+        response = events_table.scan(**scan_kwargs)
+        events.extend(response.get('Items', []))
 
         # Apply additional filters manually
         filtered_events = []
