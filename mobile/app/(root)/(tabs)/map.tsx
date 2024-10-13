@@ -14,7 +14,6 @@ import * as Location from "expo-location";
 import * as icons from "@/constants/icons";
 import Modal from "react-native-modal";
 import EventCard from "@/components/EventCard";
-import { events } from "@/constants/events";
 import { StatusBar } from "expo-status-bar";
 
 interface Club {
@@ -25,6 +24,20 @@ interface Club {
   longitude: number;
   working_days: string;
   address?: string;
+}
+
+interface Event {
+  event_id: string;
+  title: string;
+  description: string;
+  startingAt: string;
+  endingAt: string;
+  genre: string;
+  type: string;
+  theme: string;
+  longitude: string;
+  latitude: string;
+  address?: string; // Add optional address field
 }
 
 interface GetClubsResponse {
@@ -43,6 +56,7 @@ const Map = () => {
   });
   const [loading, setLoading] = useState(true); // Loading state
   const [clubModalVisible, setClubModalVisible] = useState(false);
+  const [events, setEvents] = useState<Event[]>([]); // State to store events
 
   // State to store clubs and selected club
   const [clubs, setClubs] = useState<Club[]>([]); // Stores the list of clubs
@@ -54,7 +68,7 @@ const Map = () => {
   const getAllClubs = async (latitude: number, longitude: number) => {
     try {
       const response = await fetch(
-        `https://agw3r0w73c.execute-api.eu-central-1.amazonaws.com/api-v1/club/get?longitude=${longitude}&latitude=${latitude}`
+        `https://zn44q04iq3.execute-api.eu-central-1.amazonaws.com/api-v1/club/get?longitude=${longitude}&latitude=${latitude}`
       );
       const data: GetClubsResponse = await response.json();
       setClubs(data.clubs); // Store the clubs in state
@@ -103,6 +117,30 @@ const Map = () => {
   useEffect(() => {
     if (selectedClub) {
       // Perform reverse geocoding
+      (async () => {
+        try {
+          const API_URL = process.env.EXPO_PUBLIC_EVENT_API_URL;
+
+          const response = await fetch(
+            `${API_URL}/event/club?club_id=${selectedClub.club_id}`,
+            {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          );
+
+          const data = await response.json();
+
+          console.log("Events:", data);
+
+          setEvents(data.events);
+        } catch (error) {
+          console.error("Error fetching events:", error);
+        }
+      })();
+
       (async () => {
         try {
           const addressArray = await Location.reverseGeocodeAsync({
@@ -210,7 +248,11 @@ const Map = () => {
               </Text>
               <View className="flex flex-col items-center justify-center mt-5 pb-5">
                 {events.map((event) => (
-                  <EventCard key={event.id} event={event} />
+                  <EventCard
+                    key={event.event_id}
+                    event={event}
+                    hasPhoto={false}
+                  />
                 ))}
               </View>
             </ScrollView>

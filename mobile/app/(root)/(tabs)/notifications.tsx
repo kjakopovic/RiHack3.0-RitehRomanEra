@@ -2,11 +2,19 @@
 
 import React, { useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ScrollView, View, Text, ActivityIndicator } from "react-native";
+import {
+  ScrollView,
+  View,
+  Text,
+  ActivityIndicator,
+  Alert,
+  RefreshControl,
+} from "react-native";
 import EventCard from "@/components/EventCard"; // Adjust the import path as needed
 import CameraComponent from "@/components/CameraComponent"; // Import the CameraComponent
 import { getTokens } from "@/lib/secureStore";
 import { uploadImage } from "@/lib/imageUpload";
+import * as Location from "expo-location";
 
 interface Event {
   event_id: string;
@@ -37,49 +45,48 @@ const Notifications = () => {
   // New state variable for loading events
   const [loadingEvents, setLoadingEvents] = useState(true);
 
-  useEffect(() => {
-    const fetchUserEvents = async () => {
-      setLoadingEvents(true); // Start loading
-      const { jwtToken } = await getTokens();
+  const fetchUserEvents = async () => {
+    setLoadingEvents(true); // Start loading
+    const { jwtToken } = await getTokens();
 
-      if (jwtToken) {
-        console.log("Token retrieved successfully");
+    if (jwtToken) {
+      console.log("Token retrieved successfully");
+    } else {
+      console.error("Error retrieving token");
+    }
+
+    const API_URL = process.env.EXPO_PUBLIC_EVENT_API_URL;
+
+    try {
+      const response = await fetch(`${API_URL}/events/user`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${jwtToken}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("User Events Data:", data);
+
+        // Adjust according to the actual data structure
+        const eventsArray = data.events || data; // Use data.events if data contains an 'events' property
+
+        setEvents(eventsArray);
+
+        // Categorize events after fetching
+        categorizeEvents(eventsArray);
       } else {
-        console.error("Error retrieving token");
+        console.error("Error fetching events", response.status);
       }
-
-      const API_URL = process.env.EXPO_PUBLIC_EVENT_API_URL;
-
-      try {
-        const response = await fetch(`${API_URL}/events/user`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${jwtToken}`,
-          },
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          console.log("User Events Data:", data);
-
-          // Adjust according to the actual data structure
-          const eventsArray = data.events || data; // Use data.events if data contains an 'events' property
-
-          setEvents(eventsArray);
-
-          // Categorize events after fetching
-          categorizeEvents(eventsArray);
-        } else {
-          console.error("Error fetching events", response.status);
-        }
-      } catch (error) {
-        console.error("Error fetching events:", error);
-      } finally {
-        setLoadingEvents(false); // End loading
-      }
-    };
-
+    } catch (error) {
+      console.error("Error fetching events:", error);
+    } finally {
+      setLoadingEvents(false); // End loading
+    }
+  };
+  useEffect(() => {
     fetchUserEvents();
   }, []);
 
@@ -134,68 +141,141 @@ const Notifications = () => {
     setIsCameraOpen(true);
   };
 
+  // Helper function to calculate distance using the Haversine formula
+  const getDistance = (
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number
+  ): number => {
+    const toRad = (value: number) => (value * Math.PI) / 180;
+    const R = 6371e3; // Earth radius in meters
+    const φ1 = toRad(lat1);
+    const φ2 = toRad(lat2);
+    const Δφ = toRad(lat2 - lat1);
+    const Δλ = toRad(lon2 - lon1);
+
+    const a =
+      Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    const distance = R * c; // in meters
+
+    return distance;
+  };
+
   // Function to save the picture
   const savePhoto = async (photo: any) => {
     if (photo && currentEvent) {
-      setEventPhotos((prevPhotos) => ({
-        ...prevPhotos,
-        [currentEvent.event_id]: photo.base64, // Store the base64 image under the event ID
-      }));
-
       setImageUploading(true);
-      const { jwtToken } = await getTokens();
 
-      const imageURI = await uploadImage(photo);
-
-      if (imageURI) {
-        console.log("Image uploaded successfully", imageURI);
-      } else {
-        console.error("Error uploading image");
+      // Request location permission
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert(
+          "Permission Denied",
+          "Location permission is required to verify your proximity to the event."
+        );
+        setImageUploading(false);
+        return;
       }
 
-      const IMAGE_UPLOAD_URL = process.env.EXPO_PUBLIC_EVENT_API_URL;
+      try {
+        // Get user's current location
+        const userLocation = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Highest,
+        });
 
-      const imageResponse = await fetch(`${IMAGE_UPLOAD_URL}/event/image`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${jwtToken}`,
-        },
-        body: JSON.stringify({
-          event_id: currentEvent.event_id,
-          image_link: imageURI,
-        }),
-      });
+        // Get event location
+        const eventLatitude = parseFloat(currentEvent.latitude);
+        const eventLongitude = parseFloat(currentEvent.longitude);
 
-      const imageResponseData = await imageResponse.json();
+        // Calculate distance
+        const distance = getDistance(
+          userLocation.coords.latitude,
+          userLocation.coords.longitude,
+          eventLatitude,
+          eventLongitude
+        );
 
-      console.log("Image Response Data:", imageResponseData);
+        const allowedRadius = 100; // Allowed radius in meters (e.g., 100 meters)
 
-      setImageUploading(false);
+        if (distance > allowedRadius) {
+          // User is too far from event location
+          Alert.alert(
+            "Too Far from Event",
+            `You need to be within ${allowedRadius} meters of the event location to submit a photo.`
+          );
+          setImageUploading(false);
+          return;
+        }
 
-      if (jwtToken) {
-        console.log("Token retrieved successfully");
-      } else {
-        console.log("Error retrieving token");
-      }
+        // Proceed with saving the photo
+        setEventPhotos((prevPhotos) => ({
+          ...prevPhotos,
+          [currentEvent.event_id]: photo.base64,
+        }));
 
-      const API_URL = process.env.EXPO_PUBLIC_USER_API_URL;
+        const { jwtToken } = await getTokens();
 
-      const response = await fetch(`${API_URL}/profile/info/private`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${jwtToken}`,
-        },
-        body: JSON.stringify({
-          points: 10,
-        }),
-      });
+        const imageURI = await uploadImage(photo);
 
-      if (response.ok) {
-        console.log("Points updated successfully");
-      } else {
-        console.error("Error updating points", response.status);
+        if (imageURI) {
+          console.log("Image uploaded successfully", imageURI);
+        } else {
+          console.error("Error uploading image");
+        }
+
+        const IMAGE_UPLOAD_URL = process.env.EXPO_PUBLIC_EVENT_API_URL;
+
+        const imageResponse = await fetch(`${IMAGE_UPLOAD_URL}/event/image`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${jwtToken}`,
+          },
+          body: JSON.stringify({
+            event_id: currentEvent.event_id,
+            image_link: imageURI,
+          }),
+        });
+
+        const imageResponseData = await imageResponse.json();
+
+        console.log("Image Response Data:", imageResponseData);
+
+        setImageUploading(false);
+
+        if (jwtToken) {
+          console.log("Token retrieved successfully");
+        } else {
+          console.log("Error retrieving token");
+        }
+
+        const API_URL = process.env.EXPO_PUBLIC_USER_API_URL;
+
+        const response = await fetch(`${API_URL}/profile/info/private`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${jwtToken}`,
+          },
+          body: JSON.stringify({
+            points: 10,
+          }),
+        });
+
+        if (response.ok) {
+          console.log("Points updated successfully");
+        } else {
+          console.error("Error updating points", response.status);
+        }
+      } catch (error) {
+        console.error("Error getting user location:", error);
+        Alert.alert("Error", "Unable to get your current location.");
+        setImageUploading(false);
       }
     }
   };
@@ -225,7 +305,17 @@ const Notifications = () => {
           </Text>
         </View>
       ) : (
-        <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
+        <ScrollView
+          refreshControl={
+            <RefreshControl
+              refreshing={loadingEvents}
+              onRefresh={() => {
+                fetchUserEvents();
+              }}
+            />
+          }
+          contentContainerStyle={{ paddingBottom: 20 }}
+        >
           {/* Header */}
           <View className="px-6 pt-6 pb-2">
             <Text className="text-3xl font-bold text-primary-0">My Events</Text>
