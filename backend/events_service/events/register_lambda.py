@@ -147,8 +147,8 @@ def lambda_handler(event, context):
                 'entries': []
             })
 
-            giveaways = [club_info.get('giveaways', []).append(giveaway_id)]
-            events = [club_info.get('events', []).append(event_id)]
+            giveaways = club_info.get('giveaways', []).append(giveaway_id)
+            events = club_info.get('events', []).append(event_id)
 
             clubs_table.update_item(
                 Key={
