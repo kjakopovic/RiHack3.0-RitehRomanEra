@@ -54,7 +54,7 @@ def lambda_handler(event, context):
                     picture = s3_client.get_object(Bucket=os.getenv('EVENT_PICTURES_BUCKET'), Key=f'{event_id}.jpg')
                     logger.info(f"Picture: {picture}")
                     
-                    image = picture['Body']
+                    image = picture['Body'].read()
 
                     events.append({
                         'event_id': event_id,
