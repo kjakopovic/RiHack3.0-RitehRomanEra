@@ -182,11 +182,6 @@ def lambda_handler(event, context):
                 ContentType='image/jpeg',
                 ACL='public-read'
             )
-=======
-                ContentType='image/jpeg',
-                ACL='public-read'
-            )   
->>>>>>> Stashed changes
 
         logger.info(f'Event registered successfully: {item_to_save}')
 
