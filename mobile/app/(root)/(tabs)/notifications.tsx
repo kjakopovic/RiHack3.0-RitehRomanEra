@@ -6,7 +6,7 @@ import { ScrollView, View, Text, TouchableOpacity, Image } from "react-native";
 import { liveEvents, pastEvents, upcomingEvents } from "@/constants/events";
 import EventCard from "@/components/EventCard"; // Adjust the import path as needed
 import CameraComponent from "@/components/CameraComponent"; // Import the CameraComponent
-import * as icons from "@/constants/icons";
+import { getTokens } from "@/lib/secureStore";
 
 const Notifications = () => {
   const [isCameraOpen, setIsCameraOpen] = useState(false);
@@ -20,12 +20,38 @@ const Notifications = () => {
   };
 
   // Function to save the picture
-  const savePhoto = (photo: any) => {
+  const savePhoto = async (photo: any) => {
     if (photo && currentEvent) {
       setEventPhotos((prevPhotos) => ({
         ...prevPhotos,
         [currentEvent.id]: photo.base64,
       }));
+      const { jwtToken, refreshToken } = await getTokens();
+
+      if (jwtToken && refreshToken) {
+        console.log("Tokens retrieved successfully");
+      } else {
+        console.log("Error retrieving tokens");
+      }
+
+      const API_URL = process.env.EXPO_PUBLIC_USER_API_URL;
+
+      const response = await fetch(`${API_URL}/profile/info/private`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${jwtToken}`,
+        },
+        body: JSON.stringify({
+          points: 10,
+        }),
+      });
+
+      if (response.ok) {
+        console.log("Points updated successfully");
+      } else {
+        console.error("Error updating points", response.status);
+      }
     }
   };
 

@@ -10,22 +10,64 @@ import React from "react";
 import { useEventStore } from "@/store/event-store"; // Adjust the import path as needed
 import * as images from "@/constants/images"; // Placeholder and gradient images
 import * as icons from "@/constants/icons"; // Calendar, share icons, etc.
+import { get } from "react-native/Libraries/TurboModule/TurboModuleRegistry";
+import { getTokens } from "@/lib/secureStore";
 
 interface EventCardProps {
   event: {
-    id: string;
-    name: string;
+    event_id: string;
+    title: string;
     description: string;
-    date: string;
-    time: string;
-    location: string;
-    tags: string[];
+    startingAt: string;
+    endingAt: string;
+    genre: string;
+    type: string;
+    theme: string;
+    longitude: string;
+    latitude: string;
+    address?: string;
   };
-  onCameraPress?: () => void; // Add this line
+  onCameraPress?: () => void;
 }
 
 const EventCard: React.FC<EventCardProps> = ({ event, onCameraPress }) => {
-  const { id, name, description, date, time, location, tags } = event;
+  const {
+    event_id,
+    title,
+    description,
+    startingAt,
+    endingAt,
+    latitude,
+    longitude,
+    genre,
+    type,
+    theme,
+    address,
+  } = event;
+  const tags = [genre, type, theme];
+
+  // Format the startingAt and endingAt dates
+  const formatDateTime = (isoString: string) => {
+    const date = new Date(isoString);
+    const options: Intl.DateTimeFormatOptions = {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    };
+    const timeOptions: Intl.DateTimeFormatOptions = {
+      hour: "numeric",
+      minute: "numeric",
+    };
+
+    const formattedDate = date.toLocaleDateString(undefined, options);
+    const formattedTime = date.toLocaleTimeString(undefined, timeOptions);
+
+    return `${formattedDate} at ${formattedTime}`;
+  };
+
+  const formattedStartingAt = formatDateTime(startingAt);
+  const formattedEndingAt = formatDateTime(endingAt);
 
   // Access the global state from the zustand store
   const joinedEvents = useEventStore((state) => state.joinedEvents);
@@ -33,26 +75,112 @@ const EventCard: React.FC<EventCardProps> = ({ event, onCameraPress }) => {
   const unjoinEvent = useEventStore((state) => state.unjoinEvent);
 
   // Check if the user is attending this event
-  const isAttending = joinedEvents.includes(id);
+  const isAttending = joinedEvents.includes(event_id);
 
   // Function to toggle attendance
-  const toggleAttendance = () => {
+  const toggleAttendance = async () => {
+    const API_URL = process.env.EXPO_PUBLIC_EVENT_API_URL;
+    const POINT_URL = process.env.EXPO_PUBLIC_USER_API_URL;
+    const { jwtToken, refreshToken } = await getTokens();
     if (isAttending) {
       // Unjoin the event
-      unjoinEvent(id);
-      Alert.alert("Left Event", `You have left the event: ${name}`);
+      unjoinEvent(event_id);
+      const response = await fetch(`${API_URL}/event/leave`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${jwtToken}`,
+        },
+        body: JSON.stringify({
+          event_id,
+        }),
+      });
+      if (response.ok) {
+        console.log("Left event successfully");
+        Alert.alert("Left Event", `You have left the event: ${title}`);
+        const pointsResponse = await fetch(
+          `${POINT_URL}/profile/info/private`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${jwtToken}`,
+            },
+            body: JSON.stringify({
+              points: -1,
+            }),
+          }
+        );
+        if (pointsResponse.ok) {
+          console.log("Points updated successfully");
+        } else {
+          console.error("Error updating points", pointsResponse.status);
+        }
+      } else {
+        console.error("Error leaving event", response.status);
+      }
     } else {
       // Check if the user has already joined 3 events
       if (joinedEvents.length >= 3) {
         // Show an alert informing the user they cannot join more events
         Alert.alert(
           "Event Limit Reached",
-          "You have already joined 3 events. Please unjoin an event before joining a new one."
+          "You have already joined 3 events. You won't get any more points for joining additional events."
         );
+        joinEvent(event_id);
+        const response = await fetch(`${API_URL}/event/join`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${jwtToken}`,
+          },
+          body: JSON.stringify({
+            event_id,
+          }),
+        });
+        if (response.ok) {
+          console.log("Joined event successfully");
+        } else {
+          console.error("Error joining event", response.status);
+        }
       } else {
         // Join the event
-        joinEvent(id);
-        Alert.alert("Joined Event", `You have joined the event: ${name}`);
+        joinEvent(event_id);
+        const response = await fetch(`${API_URL}/event/join`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${jwtToken}`,
+          },
+          body: JSON.stringify({
+            event_id,
+          }),
+        });
+        if (response.ok) {
+          console.log("Joined event successfully");
+          Alert.alert("Joined Event", `You have joined the event: ${title}`);
+          const pointsResponse = await fetch(
+            `${POINT_URL}/profile/info/private`,
+            {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${jwtToken}`,
+              },
+              body: JSON.stringify({
+                points: 1,
+              }),
+            }
+          );
+
+          if (pointsResponse.ok) {
+            console.log("Points updated successfully");
+          } else {
+            console.error("Error updating points", pointsResponse.status);
+          }
+        } else {
+          console.error("Error joining event", response.status);
+        }
       }
     }
   };
@@ -60,7 +188,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, onCameraPress }) => {
   // Function to share the event
   const shareEvent = async () => {
     try {
-      const message = `Check out this event: ${name} happening on ${date} at ${time} at ${location}!`;
+      const message = `Check out this event: ${title} happening on ${formattedStartingAt} at ${address}!`;
 
       const result = await Share.share({
         message,
@@ -70,6 +198,32 @@ const EventCard: React.FC<EventCardProps> = ({ event, onCameraPress }) => {
         if (result.activityType) {
           // Shared with activity type of result.activityType
           console.log(`Shared with activity type: ${result.activityType}`);
+          const { jwtToken, refreshToken } = await getTokens();
+
+          if (jwtToken && refreshToken) {
+            console.log("Tokens retrieved successfully");
+          } else {
+            console.log("Error retrieving tokens");
+          }
+
+          const API_URL = process.env.EXPO_PUBLIC_USER_API_URL;
+
+          const response = await fetch(`${API_URL}/profile/info/private`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${jwtToken}`,
+            },
+            body: JSON.stringify({
+              points: 5,
+            }),
+          });
+
+          if (response.ok) {
+            console.log("Points updated successfully");
+          } else {
+            console.error("Error updating points", response.status);
+          }
         } else {
           // Shared successfully
           Alert.alert(
@@ -106,7 +260,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, onCameraPress }) => {
 
       <View className="flex flex-col items-start justify-between px-2 py-4">
         {/* Event Name */}
-        <Text className="text-txt-100 text-2xl font-bold">{name}</Text>
+        <Text className="text-txt-100 text-2xl font-bold">{title}</Text>
 
         {/* Tags as pill elements */}
         <View className="flex flex-row flex-wrap mt-2">
@@ -128,25 +282,36 @@ const EventCard: React.FC<EventCardProps> = ({ event, onCameraPress }) => {
         {/* Event Details */}
         <View className="flex flex-row items-center gap-x-2 mt-2">
           <Image source={icons.map} className="h-4 w-4" />
-          <Text className="text-txt-200 text-sm font-medium">{location}</Text>
+          <Text
+            numberOfLines={2}
+            ellipsizeMode="tail"
+            className="text-txt-200 text-sm font-medium w-3/4"
+          >
+            {address}
+          </Text>
         </View>
         <View className="flex flex-row items-center gap-x-2 mt-1">
           <Image source={icons.calendar} className="h-4 w-4" />
-          <Text className="text-txt-200 text-sm font-medium">{date}</Text>
+          <Text className="text-txt-200 text-sm font-medium">
+            {formattedStartingAt}
+          </Text>
         </View>
         <View className="flex flex-row items-center gap-x-2 mt-1">
           <Image source={icons.hourglass} className="h-4 w-4" />
-          <Text className="text-txt-200 text-sm font-medium">{time}</Text>
+          <Text className="text-txt-200 text-sm font-medium">
+            Ends at {formattedEndingAt}
+          </Text>
         </View>
 
         {/* Action Buttons */}
         <View className="flex flex-row w-full items-center justify-end gap-x-2 mt-4">
-          {/* Share Button */}
+          {/* Camera Button */}
           {onCameraPress && (
             <TouchableOpacity onPress={onCameraPress} className="mt-1">
               <Image source={icons.camera} className="h-7 w-7" />
             </TouchableOpacity>
           )}
+          {/* Share Button */}
           <TouchableOpacity onPress={shareEvent}>
             <Image source={icons.share} className="h-7 w-7" />
           </TouchableOpacity>

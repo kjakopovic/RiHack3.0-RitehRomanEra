@@ -23,6 +23,10 @@ import dollar from "../assets/icons/dollar.png";
 import time from "../assets/icons/time.png";
 import star from "../assets/icons/star.png";
 import camera from "../assets/icons/camera.png";
+import leaderboard from "../assets/icons/leaderboard.png";
+import first from "../assets/icons/first.png";
+import second from "../assets/icons/second.png";
+import third from "../assets/icons/third.png";
 
 export {
   home,
@@ -50,4 +54,8 @@ export {
   time,
   star,
   camera,
+  leaderboard,
+  first,
+  second,
+  third,
 };

@@ -31,7 +31,7 @@ const TabIcon = ({
         source={icon}
         tintColor={focused ? "black" : "white"}
         resizeMode="contain"
-        className={`${focused ? "w-6 h-6 ml-2" : "w-7 h-7"} ${iconStyles}`}
+        className={`${focused ? "w-6 h-6 ml-3" : "w-7 h-7"} ${iconStyles}`}
       />
     </View>
     {focused && (
@@ -65,7 +65,7 @@ const TabsLayout = () => {
                 focused={focused}
                 icon={icons.home}
                 title="Home"
-                styles="ml-7"
+                styles="ml-4"
               />
             ),
           }}
@@ -96,6 +96,21 @@ const TabsLayout = () => {
           }}
         />
         <Tabs.Screen
+          name="leaderboard"
+          options={{
+            title: "Leaderboard",
+            headerShown: false,
+            tabBarIcon: ({ focused }) => (
+              <TabIcon
+                focused={focused}
+                icon={icons.leaderboard}
+                iconStyles="w-6 h-6 ml-4"
+                title="Ranking"
+              />
+            ),
+          }}
+        />
+        <Tabs.Screen
           name="profile"
           options={{
             title: "Profile",
@@ -106,6 +121,7 @@ const TabsLayout = () => {
                 icon={icons.person}
                 title="Profile"
                 iconStyles={`${focused ? "w-5 h-5" : "w-6 h-6"}`}
+                styles="mr-2"
               />
             ),
           }}

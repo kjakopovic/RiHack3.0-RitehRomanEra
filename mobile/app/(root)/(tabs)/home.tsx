@@ -1,3 +1,5 @@
+// Home.tsx
+
 import { Text, View, Image } from "react-native";
 import React, { useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -10,13 +12,27 @@ import * as images from "@/constants/images";
 import CustomSearch from "@/components/CustomSearch";
 import EventCard from "@/components/EventCard";
 import { getFirstTime, saveFirstTime } from "@/lib/secureStore";
-import { events } from "@/constants/events";
+import * as Location from "expo-location"; // Import expo-location
+import { StatusBar } from "expo-status-bar";
+
+interface Event {
+  event_id: string;
+  title: string;
+  description: string;
+  startingAt: string;
+  endingAt: string;
+  genre: string;
+  type: string;
+  theme: string;
+  longitude: string;
+  latitude: string;
+  address?: string; // Add optional address field
+}
 
 const Home = () => {
   const [query, setQuery] = useState<string>("");
   const [introModal, setIntroModal] = useState<boolean>(false);
-
-  // Dummy list of events for testing
+  const [events, setEvents] = useState<Event[]>([]);
 
   useEffect(() => {
     const fetchFirstTime = async () => {
@@ -29,7 +45,64 @@ const Home = () => {
       }
     };
 
+    const fetchEvents = async () => {
+      try {
+        const API_URL = process.env.EXPO_PUBLIC_EVENT_API_URL;
+
+        const response = await fetch(`${API_URL}/event/search`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        const data = await response.json();
+
+        // For each event, perform reverse geocoding to get address
+        const eventsWithAddresses = await Promise.all(
+          data.events.map(async (event: Event) => {
+            try {
+              const addresses = await Location.reverseGeocodeAsync({
+                latitude: parseFloat(event.latitude),
+                longitude: parseFloat(event.longitude),
+              });
+
+              let address = null;
+              if (addresses.length > 0) {
+                const addr = addresses[0];
+                address = `${addr.street || ""}, ${addr.city || ""}, ${
+                  addr.region || ""
+                }, ${addr.country || ""}`;
+              }
+
+              return {
+                ...event,
+                address,
+              };
+            } catch (error) {
+              console.error(
+                "Error reverse geocoding event:",
+                event.event_id,
+                error
+              );
+              return {
+                ...event,
+                address: null,
+              };
+            }
+          })
+        );
+
+        setEvents(eventsWithAddresses);
+
+        console.log("Events with addresses:", eventsWithAddresses);
+      } catch (error) {
+        console.error("Error fetching events:", error);
+      }
+    };
+
     fetchFirstTime();
+    fetchEvents();
   }, []);
 
   const onTextChange = (text: string) => {
@@ -71,7 +144,7 @@ const Home = () => {
         <View className="flex flex-col items-center justify-center mt-5 pb-16">
           {/* Map over the events array and render EventCard for each event */}
           {events.map((event) => (
-            <EventCard key={event.id} event={event} />
+            <EventCard key={event.event_id} event={event} />
           ))}
         </View>
       </ScrollView>
@@ -147,6 +220,7 @@ const Home = () => {
           </ScrollView>
         </View>
       </Modal>
+      <StatusBar style="dark" />
     </SafeAreaView>
   );
 };

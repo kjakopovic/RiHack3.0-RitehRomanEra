@@ -4,10 +4,16 @@ import * as SecureStore from "expo-secure-store";
 export const storeTokens = async (jwtToken: string, refreshToken: string) => {
   try {
     // Store JWT Token
-    await SecureStore.setItemAsync("jwtToken", JSON.stringify(jwtToken) as string);
+    await SecureStore.setItemAsync(
+      "jwtToken",
+      JSON.stringify(jwtToken) as string
+    );
 
     // Store Refresh Token
-    await SecureStore.setItemAsync("refreshToken", JSON.stringify(refreshToken) as string);
+    await SecureStore.setItemAsync(
+      "refreshToken",
+      JSON.stringify(refreshToken) as string
+    );
 
     console.log("Tokens stored successfully");
   } catch (error) {
@@ -16,26 +22,36 @@ export const storeTokens = async (jwtToken: string, refreshToken: string) => {
 };
 
 // Function to retrieve JWT and refresh tokens
-export const getTokens = async () => {
+export async function getTokens() {
   try {
-    // Retrieve JWT Token
     const jwtToken = await SecureStore.getItemAsync("jwtToken");
-
-    // Retrieve Refresh Token
     const refreshToken = await SecureStore.getItemAsync("refreshToken");
 
-    if (jwtToken && refreshToken) {
-      return { jwtToken, refreshToken };
-    } else {
-      console.log("Tokens not found");
-      return null;
-    }
+    // Check if the retrieved tokens are valid JSON strings
+    const isJson = (str: string) => {
+      try {
+        JSON.parse(str);
+        return true;
+      } catch (error) {
+        console.error("Error parsing JSON:", error);
+        return false;
+      }
+    };
+
+    console.log("Retrieved Tokens:", { jwtToken, refreshToken });
+
+    return {
+      jwtToken: jwtToken && isJson(jwtToken) ? JSON.parse(jwtToken) : jwtToken,
+      refreshToken:
+        refreshToken && isJson(refreshToken)
+          ? JSON.parse(refreshToken)
+          : refreshToken,
+    };
   } catch (error) {
     console.error("Error retrieving tokens:", error);
-    return null;
+    return { jwtToken: null, refreshToken: null };
   }
-};
-
+}
 
 export const saveFirstTime = async () => {
   try {
@@ -43,7 +59,7 @@ export const saveFirstTime = async () => {
   } catch (error) {
     console.error("Error saving first time:", error);
   }
-}
+};
 
 export const getFirstTime = async () => {
   try {
@@ -57,4 +73,4 @@ export const getFirstTime = async () => {
     console.error("Error getting first time:", error);
     return null;
   }
-}
+};

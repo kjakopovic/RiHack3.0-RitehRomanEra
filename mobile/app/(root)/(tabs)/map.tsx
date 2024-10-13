@@ -15,6 +15,7 @@ import * as icons from "@/constants/icons";
 import Modal from "react-native-modal";
 import EventCard from "@/components/EventCard";
 import { events } from "@/constants/events";
+import { StatusBar } from "expo-status-bar";
 
 interface Club {
   club_id: string;
@@ -161,6 +162,7 @@ const Map = () => {
           </MapView>
         )}
       </View>
+      <StatusBar style="auto" />
       {/* Club Details Modal */}
       {selectedClub && (
         <Modal
