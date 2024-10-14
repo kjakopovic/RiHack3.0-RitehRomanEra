@@ -17,18 +17,16 @@ def lambda_handler(event, context):
     dynamodb = boto3.resource('dynamodb')
     users_table = dynamodb.Table(os.getenv('USERS_TABLE_NAME'))
 
-    logger.info("GET USERS PUBLIC INFO - Fetching user information.")
+    logger.info("GET USERS PRIVATE INFO - Fetching user information.")
 
     # Find user in the table by email
     try:
-        response = users_table.get_item(
-            Key={
-                'email': email
-            }
-        )
+        response = users_table.scan()
+
+        logger.info(f"GET USERS PRIVATE INFO - Found {response}")
 
         # Check if user exists
-        if not response.get('Item'):
+        if not response.get('Items'):
             return {
                 'statusCode': 400,
                 'headers': {
@@ -39,9 +37,22 @@ def lambda_handler(event, context):
                 })
             }
         
-        user_profile_picture = common_handler.get_profile_picture_as_base64_from_s3(email)
+        users = response['Items']
+
+        logger.info(f"GET USERS PRIVATE INFO - Found {users} users.")
+
+        filtered_users = []
+
+        for user in users:
+            filtered_users.append({
+                'email': user['email'],
+                'points': float(user['points']),
+                'first_name': user['first_name'],
+                'last_name': user['last_name']
+            })
+
     except Exception as e:
-        logger.error(f"GET USERS PUBLIC INFO - Couldn't get public info: {str(e)}")
+        logger.error(f"GET USERS PRIVATE INFO - Couldn't get private info: {str(e)}")
 
         return {
             'statusCode': 500,
@@ -49,7 +60,7 @@ def lambda_handler(event, context):
                 'Content-Type': 'application/json'
             },
             'body': json.dumps({
-                'message': f"Couldn't get public info. Please try again or contact support."
+                'message': f"Couldn't get private info. Please try again or contact support."
             })
         }
     
@@ -59,12 +70,7 @@ def lambda_handler(event, context):
             'Content-Type': 'application/json'
         },
         'body': json.dumps({
-            'info': {
-                'email': response['Item']['email'] if response.get('Item').get('email') else None,
-                'first_name': response['Item']['first_name'] if response.get('Item').get('first_name') else None,
-                'last_name': response['Item']['last_name'] if response.get('Item').get('last_name') else None,
-                'points': response['Item']['points'] if response.get('Item').get('points') else 0,
-                'profile_picture': user_profile_picture
-            }
+            'users': filtered_users,
+            'current_user': email
         })
     }

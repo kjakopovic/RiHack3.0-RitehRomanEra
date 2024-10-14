@@ -1,6 +1,7 @@
 import json
 import boto3
 import os
+import bcrypt
 import logging
 
 import backend.common.common as common_handler
@@ -11,11 +12,11 @@ logger.setLevel(logging.INFO)
 def lambda_handler(event, context):
     event = json.loads(event.get('body')) if 'body' in event else event
 
-    logger.info(f'VALIDATE USER LOGIN - Checking if every required attribute is found in body: {event}')
+    logger.info(f'LOGIN - Checking if every required attribute is found in body: {event}')
 
     try:
         email = event['email']
-        six_digit_code = event['six_digit_code']
+        password = event['password']
     except Exception as e:
         return {
             'statusCode': 400,
@@ -26,19 +27,19 @@ def lambda_handler(event, context):
                 'message': f'{e} is missing, please check and try again'
             })
         }
-    
-    logger.info(f'VALIDATE USER LOGIN - Getting database client.')
+
+    logger.info(f'LOGIN - Getting database client.')
     
     dynamodb = boto3.resource('dynamodb')
-    users_table = dynamodb.Table(os.getenv('USERS_TABLE_NAME'))
+    clubs_table = dynamodb.Table(os.getenv('CLUBS_TABLE_NAME'))
 
-    logger.info(f'VALIDATE USER LOGIN - Checking if user exists in the database.')
+    logger.info(f'CLUB LOGIN - Checking if user exists in the database.')
 
     # Find user in the table by email
     try:
-        response = users_table.get_item(
+        response = clubs_table.get_item(
             Key={
-                'email': email
+                'club_id': email
             }
         )
 
@@ -50,7 +51,7 @@ def lambda_handler(event, context):
                     'Content-Type': 'application/json'
                 },
                 'body': json.dumps({
-                    'message': 'We could not find your email. Please try again or contact support.'
+                    'message': 'We could not find your club_id. Please try again or contact support.'
                 })
             }
     except Exception as e:
@@ -64,29 +65,37 @@ def lambda_handler(event, context):
             })
         }
 
-    # Check if the six digit code is correct
-    if not common_handler.check_is_six_digit_code_valid(six_digit_code, email):
+    # Verify password (assuming the password is stored in hashed form)
+    club = response.get('Item')
+
+    if not club:
+        return {
+            'statusCode': 500,
+            'headers': {
+                'Content-Type': 'application/json'
+            },
+            'body': json.dumps({
+                'message': 'Unable to generate tokens. Please contact support.'
+            })
+        }
+        
+    stored_password = club.get('password')
+    
+    if not bcrypt.checkpw(password.encode(), stored_password.encode()):
         return {
             'statusCode': 400,
             'headers': {
                 'Content-Type': 'application/json'
             },
             'body': json.dumps({
-                'message': 'Your six digit code has expired or is incorrect. Please request a new one.'
+                'message': 'Incorrect email or password.'
             })
         }
-    
-    # Terminate the six digit code data
-    users_table.update_item(
-        Key={
-            'email': response['Item']['email']
-        },
-        UpdateExpression='REMOVE six_digit_code, six_digit_code_expiration'
-    )
-    
-    # Generate jwt and refresh tokens
+    # Generate JWT and refresh tokens
     access_token = common_handler.generate_access_token(email)
-    refresh_token = common_handler.generate_refresh_token(users_table, email)
+    refresh_token = common_handler.generate_refresh_token(clubs_table, email, is_clubs_table=True)
+
+    logger.info(f'LOGIN - Generated tokens: {access_token}, {refresh_token}')
 
     if not access_token or not refresh_token:
         return {
@@ -95,7 +104,7 @@ def lambda_handler(event, context):
                 'Content-Type': 'application/json'
             },
             'body': json.dumps({
-                'message': f"Unable to generate tokens. Please contact support."
+                'message': 'Unable to generate tokens. Please contact support.'
             })
         }
 
@@ -108,6 +117,11 @@ def lambda_handler(event, context):
             'message': 'Logged in successfully, welcome!',
             'token': access_token,
             'refresh_token': refresh_token,
-            'event_ids': response.get('Item').get('events', [])
+            "club": {
+                "club_id": club.get('club_id'),
+                "club_name": club.get('club_name'),
+                "default_working_hours": club.get('default_working_hours'),
+                "working_days": club.get('working_days')
+            }
         })
     }

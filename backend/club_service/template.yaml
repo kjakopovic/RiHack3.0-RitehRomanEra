@@ -1,0 +1,297 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  club_service
+
+Parameters:
+  JwtSecretName:
+    Type: String
+    Description: Name of the secret in Secrets Manager that contains the JWT secret
+    Default: python-lambda-app/prod/jwt-secret
+
+  JwtSecretArn:
+    Type: String
+    Description: ARN for the secret in Secrets Manager that contains the JWT secret
+    Default: arn:aws:secretsmanager:eu-central-1:333855566543:secret:python-lambda-app/prod/jwt-secret-jN0u8x
+
+  SecretsRegionName:
+    Type: String
+    Description: Region name where the secrets are stored
+    Default: eu-central-1
+
+# Global Settings
+Globals:
+  Api:
+    Cors:
+      AllowMethods: "*"
+      AllowHeaders: "*"
+      AllowOrigin: "*"
+      AllowCredentials: 'true'
+  Function:
+    Timeout: 60
+    MemorySize: 256
+
+Resources:
+  # API Gateway
+  ClubServiceApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: api-v1
+
+  # DynamoDB Table definition
+  ClubsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: clubs
+      AttributeDefinitions:
+        - AttributeName: club_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: club_id
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+
+  # Lambda Functions
+  RegisterClubFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      CodeUri: ./
+      Handler: register_lambda.lambda_handler
+      Runtime: python3.12
+      Environment:
+        Variables:
+          CLUBS_TABLE_NAME: !Ref ClubsTable
+      Architectures:
+        - x86_64
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            # Users table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:PutItem"
+                - "dynamodb:DeleteItem"
+                - "dynamodb:GetItem"
+                - "dynamodb:UpdateItem"
+              Resource: !GetAtt ClubsTable.Arn
+      Events:
+        RegisterEventEndpoint:
+          Type: HttpApi 
+          Properties:
+            Path: /club/register
+            Method: POST
+            ApiId: !Ref ClubServiceApi
+
+  LoginClubFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      CodeUri: ./
+      Handler: login_lambda.lambda_handler
+      Runtime: python3.12
+      Environment:
+        Variables:
+          CLUBS_TABLE_NAME: !Ref ClubsTable
+          JWT_SECRET_NAME: !Ref JwtSecretName
+          SECRETS_REGION_NAME: !Ref SecretsRegionName
+      Architectures:
+        - x86_64
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - "dynamodb:GetItem"
+                - "dynamodb:UpdateItem"
+              Resource: !GetAtt ClubsTable.Arn
+            # Secrets Manager for jwt secret permissions
+            - Effect: Allow
+              Action:
+                - secretsmanager:GetSecretValue
+              Resource: !Ref JwtSecretArn
+      Events:
+        LoginClubEndpoint:
+          Type: HttpApi
+          Properties:
+            Path: /club/login
+            Method: POST
+            ApiId: !Ref ClubServiceApi
+
+  LogoutClubFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      CodeUri: ./
+      Handler: logout_lambda.lambda_handler
+      Runtime: python3.12
+      Environment:
+        Variables:
+          CLUBS_TABLE_NAME: !Ref ClubsTable
+          JWT_SECRET_NAME: !Ref JwtSecretName
+          SECRETS_REGION_NAME: !Ref SecretsRegionName
+      Architectures:
+        - x86_64
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - "dynamodb:GetItem"
+                - "dynamodb:UpdateItem"
+              Resource: !GetAtt ClubsTable.Arn
+            # Secrets Manager for jwt secret permissions
+            - Effect: Allow
+              Action:
+                - secretsmanager:GetSecretValue
+              Resource: !Ref JwtSecretArn
+      Events:
+        LogoutClubEndpoint:
+          Type: HttpApi
+          Properties:
+            Path: /club/logout
+            Method: POST
+            ApiId: !Ref ClubServiceApi
+
+  GetAllClubsFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      CodeUri: ./
+      Handler: get_all_clubs_lambda.lambda_handler
+      Runtime: python3.12
+      Environment:
+        Variables:
+          CLUBS_TABLE_NAME: !Ref ClubsTable
+          JWT_SECRET_NAME: !Ref JwtSecretName
+          SECRETS_REGION_NAME: !Ref SecretsRegionName
+      Architectures:
+        - x86_64
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            # Users table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:PutItem"
+                - "dynamodb:DeleteItem"
+                - "dynamodb:GetItem"
+                - "dynamodb:UpdateItem"
+                - "dynamodb:Scan"
+              Resource: !GetAtt ClubsTable.Arn
+            # Secrets Manager for jwt secret permissions
+            - Effect: Allow
+              Action:
+                - secretsmanager:GetSecretValue
+              Resource: !Ref JwtSecretArn
+      Events:
+        GetAllClubsEndpoint:
+          Type: HttpApi 
+          Properties:
+            Path: /club/get
+            Method: GET
+            ApiId: !Ref ClubServiceApi
+
+  RefreshTokenFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      CodeUri: ./
+      Handler: refresh_token_lambda.lambda_handler
+      Runtime: python3.12
+      Environment:
+        Variables:
+          CLUBS_TABLE_NAME: !Ref ClubsTable
+          JWT_SECRET_NAME: !Ref JwtSecretName
+          SECRETS_REGION_NAME: !Ref SecretsRegionName
+      Architectures:
+        - x86_64
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            # Users table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:PutItem"
+                - "dynamodb:DeleteItem"
+                - "dynamodb:GetItem"
+                - "dynamodb:UpdateItem"
+                - "dynamodb:Scan"
+              Resource: !GetAtt ClubsTable.Arn
+            # Secrets Manager for jwt secret permissions
+            - Effect: Allow
+              Action:
+                - secretsmanager:GetSecretValue
+              Resource: !Ref JwtSecretArn
+      Events:
+        RefreshTokenEndpoint:
+          Type: HttpApi 
+          Properties:
+            Path: /club/refresh
+            Method: GET
+            ApiId: !Ref ClubServiceApi
+
+  UpdateClubFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      CodeUri: ./
+      Handler: update_lambda.lambda_handler
+      Runtime: python3.12
+      Environment:
+        Variables:
+          CLUBS_TABLE_NAME: !Ref ClubsTable
+          JWT_SECRET_NAME: !Ref JwtSecretName
+          SECRETS_REGION_NAME: !Ref SecretsRegionName
+      Architectures:
+        - x86_64
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            # Users table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:PutItem"
+                - "dynamodb:DeleteItem"
+                - "dynamodb:GetItem"
+                - "dynamodb:UpdateItem"
+              Resource: !GetAtt ClubsTable.Arn
+            # Secrets Manager for jwt secret permissions
+            - Effect: Allow
+              Action:
+                - secretsmanager:GetSecretValue
+              Resource: !Ref JwtSecretArn
+      Events:
+        UpdateClubEndpoint:
+          Type: HttpApi 
+          Properties:
+            Path: /club/update
+            Method: PUT
+            ApiId: !Ref ClubServiceApi
+
+Outputs:
+  ClubsTableArn:
+    Description: "Users table ARN"
+    Value: !GetAtt ClubsTable.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-ClubsTableArn"
+
+  ClubsTableName:
+    Description: "Users table NAME"
+    Value: !Ref ClubsTable
+    Export:
+      Name: !Sub "${AWS::StackName}-ClubsTableName"
+
+  EndpointURI:
+    Description: "API Endpoint URL"
+    Value: !Sub "https://${ClubServiceApi}.execute-api.${AWS::Region}.amazonaws.com/api-v1"
+    Export:
+      Name: ClubServiceApiUrl

@@ -66,9 +66,9 @@ Parameters:
 Globals:
   Api:
     Cors:
-      AllowMethods: "'*'"
-      AllowHeaders: "'*'"
-      AllowOrigin: "'*'"
+      AllowMethods: "*"
+      AllowHeaders: "*"
+      AllowOrigin: "*"
       AllowCredentials: 'true'
   Function:
     Timeout: 60
@@ -705,6 +705,42 @@ Resources:
           Properties:
             Path: /profile/info/private
             Method: PUT
+            ApiId: !Ref UserServiceApi
+
+  GetUsersOrderedByPointsFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      CodeUri: ./
+      Handler: get_all_users_ordered_by_points.lambda_handler
+      Runtime: python3.12
+      Environment:
+        Variables:
+          USERS_TABLE_NAME: !Ref UsersTable
+          JWT_SECRET_NAME: !Ref JwtSecretName
+          SECRETS_REGION_NAME: !Ref SecretsRegionName
+      Architectures:
+        - x86_64
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            # Users table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:*"
+              Resource: !GetAtt UsersTable.Arn
+            # Secrets Manager for jwt secret permissions
+            - Effect: Allow
+              Action:
+                - secretsmanager:GetSecretValue
+              Resource: !Ref JwtSecretArn
+      Events:
+        GetUsersOrderedByPointsEndpoint:
+          Type: HttpApi 
+          Properties:
+            Path: /user/all
+            Method: GET
             ApiId: !Ref UserServiceApi
 
 Outputs:

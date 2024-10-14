@@ -1,0 +1,646 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  events_service
+
+Parameters:
+  JwtSecretName:
+    Type: String
+    Description: Name of the secret in Secrets Manager that contains the JWT secret
+    Default: python-lambda-app/prod/jwt-secret
+
+  JwtSecretArn:
+    Type: String
+    Description: ARN for the secret in Secrets Manager that contains the JWT secret
+    Default: arn:aws:secretsmanager:eu-central-1:333855566543:secret:python-lambda-app/prod/jwt-secret-jN0u8x
+
+  SecretsRegionName:
+    Type: String
+    Description: Region name where the secrets are stored
+    Default: eu-central-1
+
+  EventPicturesBucket:
+    Type: String
+    Description: S3 bucket for profile pictures
+    Default: rihack-event-images
+
+  EventPicturesBucketArn:
+    Type: String
+    Description: ARN for the S3 bucket for profile pictures
+    Default: arn:aws:s3:::rihack-event-images/**
+
+# Global Settings
+Globals:
+  Api:
+    Cors:
+      AllowMethods: "*"
+      AllowHeaders: "*"
+      AllowOrigin: "*"
+      AllowCredentials: 'true'
+  Function:
+    Timeout: 60
+    MemorySize: 256
+
+Resources:
+  # API Gateway
+  EventsServiceApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: api-v1
+
+  # DynamoDB Table definition
+  EventsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: events
+      AttributeDefinitions:
+        - AttributeName: event_id
+          AttributeType: S
+        - AttributeName: startingAt
+          AttributeType: S
+      KeySchema:
+        - AttributeName: event_id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: startingAt-index
+          KeySchema:
+            - AttributeName: startingAt
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+          ProvisionedThroughput:
+            ReadCapacityUnits: 5
+            WriteCapacityUnits: 5
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+
+  GiveawayTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: giveaways
+      AttributeDefinitions:
+        - AttributeName: giveaway_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: giveaway_id
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+
+  EventImagesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: event_images
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+
+  # Lambda Functions
+  RegisterEventFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      CodeUri: ./
+      Handler: register_lambda.lambda_handler
+      Runtime: python3.12
+      Environment:
+        Variables:
+          EVENTS_TABLE_NAME: !Ref EventsTable
+          GIVEAWAY_TABLE_NAME: !Ref GiveawayTable
+          CLUBS_TABLE_NAME: !ImportValue club-service-ClubsTableName
+          USERS_TABLE_NAME: !ImportValue user-service-UsersTableName
+          JWT_SECRET_NAME: !Ref JwtSecretName
+          SECRETS_REGION_NAME: !Ref SecretsRegionName
+          EVENT_PICTURES_BUCKET: !Ref EventPicturesBucket
+      Architectures:
+        - x86_64
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            # Events table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:*"
+              Resource: !GetAtt EventsTable.Arn
+            # Giveaway table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:*"
+              Resource: !GetAtt GiveawayTable.Arn
+            # Clubs table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:*"
+              Resource: !ImportValue club-service-ClubsTableArn
+            # Users table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:*"
+              Resource: !ImportValue user-service-UsersTableArn
+            # Secrets Manager for jwt secret permissions
+            - Effect: Allow
+              Action:
+                - secretsmanager:GetSecretValue
+              Resource: !Ref JwtSecretArn
+            # S3 bucket for profile pictures permissions
+            - Effect: Allow
+              Action:
+                - "s3:*"
+              Resource: !Ref EventPicturesBucketArn
+      Events:
+        RegisterEventEndpoint:
+          Type: HttpApi 
+          Properties:
+            Path: /event/register
+            Method: POST
+            ApiId: !Ref EventsServiceApi
+
+  JoinEventFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      CodeUri: ./
+      Handler: join_event_lambda.lambda_handler
+      Runtime: python3.12
+      Environment:
+        Variables:
+          EVENTS_TABLE_NAME: !Ref EventsTable
+          USERS_TABLE_NAME: !ImportValue user-service-UsersTableName
+          JWT_SECRET_NAME: !Ref JwtSecretName
+          SECRETS_REGION_NAME: !Ref SecretsRegionName
+      Architectures:
+        - x86_64
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            # Events table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:GetItem"
+                - "dynamodb:UpdateItem"
+              Resource: !GetAtt EventsTable.Arn
+            # Users table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:GetItem"
+                - "dynamodb:UpdateItem"
+              Resource: !ImportValue user-service-UsersTableArn
+            # Secrets Manager for JWT secret permissions
+            - Effect: Allow
+              Action:
+                - secretsmanager:GetSecretValue
+              Resource: !Ref JwtSecretArn
+      Events:
+        JoinEventEndpoint:
+          Type: HttpApi
+          Properties:
+            Path: /event/join
+            Method: POST
+            ApiId: !Ref EventsServiceApi
+
+  LeaveEventFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      CodeUri: ./
+      Handler: leave_event_lambda.lambda_handler
+      Runtime: python3.12
+      Environment:
+        Variables:
+          EVENTS_TABLE_NAME: !Ref EventsTable
+          USERS_TABLE_NAME: !ImportValue user-service-UsersTableName
+          JWT_SECRET_NAME: !Ref JwtSecretName
+          SECRETS_REGION_NAME: !Ref SecretsRegionName
+      Architectures:
+        - x86_64
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            # Events table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:GetItem"
+                - "dynamodb:UpdateItem"
+              Resource: !GetAtt EventsTable.Arn
+            # Users table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:GetItem"
+                - "dynamodb:UpdateItem"
+              Resource: !ImportValue user-service-UsersTableArn
+            # Secrets Manager for JWT secret permissions
+            - Effect: Allow
+              Action:
+                - secretsmanager:GetSecretValue
+              Resource: !Ref JwtSecretArn
+      Events:
+        LeaveEventEndpoint:
+          Type: HttpApi
+          Properties:
+            Path: /event/leave
+            Method: POST
+            ApiId: !Ref EventsServiceApi
+
+  GetRandomGiveawayWinnerFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      CodeUri: ./
+      Handler: get_random_winner_lambda.lambda_handler
+      Runtime: python3.12
+      Environment:
+        Variables:
+          GIVEAWAY_TABLE_NAME: !Ref GiveawayTable
+          USERS_TABLE_NAME: !ImportValue user-service-UsersTableName
+      Architectures:
+        - x86_64
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            # Events table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:PutItem"
+                - "dynamodb:DeleteItem"
+                - "dynamodb:GetItem"
+                - "dynamodb:UpdateItem"
+              Resource: !GetAtt EventsTable.Arn
+            # Users table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:PutItem"
+                - "dynamodb:DeleteItem"
+                - "dynamodb:GetItem"
+                - "dynamodb:UpdateItem"
+              Resource: !ImportValue user-service-UsersTableArn
+      Events:
+        GetRandomGiveawayWinnerEndpoint:
+          Type: HttpApi 
+          Properties:
+            Path: /giveaway/winner
+            Method: GET
+            ApiId: !Ref EventsServiceApi
+  
+  SearchEventFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      CodeUri: ./
+      Handler: search_lambda.lambda_handler
+      Runtime: python3.12
+      Environment:
+        Variables:
+          EVENTS_TABLE_NAME: !Ref EventsTable
+          EVENT_PICTURES_BUCKET: !Ref EventPicturesBucket
+      Architectures:
+        - x86_64
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            # Events table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:*"  # Allow scan action for search
+              Resource: !GetAtt EventsTable.Arn
+            # S3 bucket for profile pictures permissions
+            - Effect: Allow
+              Action:
+                - "s3:*"
+              Resource: !Ref EventPicturesBucketArn
+            # S3 bucket for profile pictures permissions
+            - Effect: Allow
+              Action:
+                - "s3:*"
+              Resource: arn:aws:s3:::rihack-event-images
+      Events:
+        SearchEventEndpoint:
+          Type: HttpApi
+          Properties:
+            Path: /event/search  # URL path for search functionality
+            Method: GET  # Using GET method as it's search-based
+            ApiId: !Ref EventsServiceApi
+
+  JoinGiveawayFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      CodeUri: ./
+      Handler: giveaway_join_lambda.lambda_handler
+      Runtime: python3.12
+      Environment:
+        Variables:
+          EVENTS_TABLE_NAME: !Ref EventsTable
+          GIVEAWAY_TABLE_NAME: !Ref GiveawayTable
+          USERS_TABLE_NAME: !ImportValue user-service-UsersTableName
+          JWT_SECRET_NAME: !Ref JwtSecretName
+          SECRETS_REGION_NAME: !Ref SecretsRegionName
+      Architectures:
+        - x86_64
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            # Events table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:GetItem"
+                - "dynamodb:UpdateItem"
+              Resource: !GetAtt EventsTable.Arn
+            # Giveaway table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:*"
+              Resource: !GetAtt GiveawayTable.Arn
+            # Users table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:GetItem"
+                - "dynamodb:UpdateItem"
+              Resource: !ImportValue user-service-UsersTableArn
+            # Secrets Manager for JWT secret permissions
+            - Effect: Allow
+              Action:
+                - secretsmanager:GetSecretValue
+              Resource: !Ref JwtSecretArn
+      Events:
+        JoinGiveawayEndpoint:
+          Type: HttpApi
+          Properties:
+            Path: /giveaway/join
+            Method: GET
+            ApiId: !Ref EventsServiceApi
+
+  EventImagesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: event_images
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+
+  SaveEventImageFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      CodeUri: ./
+      Handler: event_image_lambda.lambda_handler
+      Runtime: python3.12
+      Environment:
+        Variables:
+          EVENT_IMAGES_TABLE_NAME: !Ref EventImagesTable
+          USERS_TABLE_NAME: !ImportValue user-service-UsersTableName
+          JWT_SECRET_NAME: !Ref JwtSecretName
+          SECRETS_REGION_NAME: !Ref SecretsRegionName
+      Architectures:
+        - x86_64
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            # EventImages table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:PutItem"
+                - "dynamodb:GetItem"
+              Resource: !GetAtt EventImagesTable.Arn
+            # Users table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:GetItem"
+              Resource: !ImportValue user-service-UsersTableArn
+            # Secrets Manager for JWT secret permissions
+            - Effect: Allow
+              Action:
+                - "secretsmanager:GetSecretValue"
+              Resource: !Ref JwtSecretArn
+      Events:
+        SaveEventImageEndpoint:
+          Type: HttpApi
+          Properties:
+            Path: /event/image
+            Method: POST
+            ApiId: !Ref EventsServiceApi
+
+  GetEventInfoFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      CodeUri: ./
+      Handler: event_info.lambda_handler
+      Runtime: python3.12
+      Environment:
+        Variables:
+          EVENTS_TABLE_NAME: !Ref EventsTable
+          EVENT_IMAGES_TABLE_NAME: !Ref EventImagesTable
+          JWT_SECRET_NAME: !Ref JwtSecretName
+          SECRETS_REGION_NAME: !Ref SecretsRegionName
+      Architectures:
+        - x86_64
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            # Events table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:*"
+              Resource: !GetAtt EventsTable.Arn
+            - Effect: Allow
+              Action:
+                - "dynamodb:*"
+              Resource: !GetAtt EventImagesTable.Arn
+            # EventImages table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:Query"
+              Resource:
+                - !GetAtt EventImagesTable.Arn
+                - !Sub "${EventImagesTable.Arn}/index/event_id-index"
+            # Secrets Manager for JWT secret permissions
+            - Effect: Allow
+              Action:
+                - "secretsmanager:GetSecretValue"
+              Resource: !Ref JwtSecretArn
+      Events:
+        GetEventInfoEndpoint:
+          Type: HttpApi
+          Properties:
+            Path: /event/info
+            Method: ANY
+            ApiId: !Ref EventsServiceApi
+
+  GetUsersEventsFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      CodeUri: ./
+      Handler: get_users_events_lambda.lambda_handler
+      Runtime: python3.12
+      Environment:
+        Variables:
+          EVENTS_TABLE_NAME: !Ref EventsTable
+          USERS_TABLE_NAME: !ImportValue user-service-UsersTableName
+          JWT_SECRET_NAME: !Ref JwtSecretName
+          SECRETS_REGION_NAME: !Ref SecretsRegionName
+          EVENT_PICTURES_BUCKET: !Ref EventPicturesBucket
+      Architectures:
+        - x86_64
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            # Events table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:*"
+              Resource: !GetAtt EventsTable.Arn
+            # Users table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:*"
+              Resource: !ImportValue user-service-UsersTableArn
+            # Secrets Manager for jwt secret permissions
+            - Effect: Allow
+              Action:
+                - secretsmanager:GetSecretValue
+              Resource: !Ref JwtSecretArn
+            # S3 bucket for profile pictures permissions
+            - Effect: Allow
+              Action:
+                - "s3:*"
+              Resource: !Ref EventPicturesBucketArn
+      Events:
+        GetUsersEventsEndpoint:
+          Type: HttpApi
+          Properties:
+            Path: /events/user
+            Method: GET
+            ApiId: !Ref EventsServiceApi
+
+  GetClubsEventsFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      CodeUri: ./
+      Handler: get_clubs_events_lambda.lambda_handler
+      Runtime: python3.12
+      Environment:
+        Variables:
+          EVENTS_TABLE_NAME: !Ref EventsTable
+          CLUBS_TABLE_NAME: !ImportValue club-service-ClubsTableName
+          JWT_SECRET_NAME: !Ref JwtSecretName
+          SECRETS_REGION_NAME: !Ref SecretsRegionName
+          EVENT_PICTURES_BUCKET: !Ref EventPicturesBucket
+      Architectures:
+        - x86_64
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            # Events table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:*"
+              Resource: !GetAtt EventsTable.Arn
+            # Clubs table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:*"
+              Resource: !ImportValue club-service-ClubsTableArn
+            # Secrets Manager for jwt secret permissions
+            - Effect: Allow
+              Action:
+                - secretsmanager:GetSecretValue
+              Resource: !Ref JwtSecretArn
+            # S3 bucket for profile pictures permissions
+            - Effect: Allow
+              Action:
+                - "s3:*"
+              Resource: !Ref EventPicturesBucketArn
+      Events:
+        GetClubsEventsEndpoint:
+          Type: HttpApi
+          Properties:
+            Path: /events/club
+            Method: GET
+            ApiId: !Ref EventsServiceApi
+
+  GetClubsGiveawaysFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      CodeUri: ./
+      Handler: get_clubs_giveaways_lambda.lambda_handler
+      Runtime: python3.12
+      Environment:
+        Variables:
+          GIVEAWAY_TABLE_NAME: !Ref GiveawayTable
+          CLUBS_TABLE_NAME: !ImportValue club-service-ClubsTableName
+          JWT_SECRET_NAME: !Ref JwtSecretName
+          SECRETS_REGION_NAME: !Ref SecretsRegionName
+      Architectures:
+        - x86_64
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            # Giveaway table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:*"
+              Resource: !GetAtt GiveawayTable.Arn
+            # Clubs table permissions
+            - Effect: Allow
+              Action:
+                - "dynamodb:*"
+              Resource: !ImportValue club-service-ClubsTableArn
+            # Secrets Manager for jwt secret permissions
+            - Effect: Allow
+              Action:
+                - secretsmanager:GetSecretValue
+              Resource: !Ref JwtSecretArn
+      Events:
+        GetClubsGiveawaysEndpoint:
+          Type: HttpApi
+          Properties:
+            Path: /events/giveaway
+            Method: GET
+            ApiId: !Ref EventsServiceApi
+
+Outputs:
+  EventsTableArn:
+    Description: "Events table ARN"
+    Value: !GetAtt EventsTable.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-EventsTableArn"
+
+  EventsTableName:
+    Description: "Events table NAME"
+    Value: !Ref EventsTable
+    Export:
+      Name: !Sub "${AWS::StackName}-EventsTableName"
+
+  EndpointURI:
+    Description: "API Endpoint URL"
+    Value: !Sub "https://${EventsServiceApi}.execute-api.${AWS::Region}.amazonaws.com/api-v1"
+    Export:
+      Name: EventsServiceApiUrl

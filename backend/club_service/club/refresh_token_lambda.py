@@ -9,14 +9,16 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 def lambda_handler(event, context):
-    event = json.loads(event.get('body')) if 'body' in event else event
+    event = event.get('queryStringParameters', {})
 
-    logger.info(f'VALIDATE USER LOGIN - Checking if every required attribute is found in body: {event}')
+    logger.info(f'CLUB REFRESH TOKEN - Checking is every required attribute found in query: {event}')
 
     try:
         email = event['email']
-        six_digit_code = event['six_digit_code']
+        refresh_token = event['refresh_token']
     except Exception as e:
+        logger.error(f'CLUB REFRESH TOKEN - {e} is missing, please check and try again')
+
         return {
             'statusCode': 400,
             'headers': {
@@ -27,18 +29,18 @@ def lambda_handler(event, context):
             })
         }
     
-    logger.info(f'VALIDATE USER LOGIN - Getting database client.')
-    
-    dynamodb = boto3.resource('dynamodb')
-    users_table = dynamodb.Table(os.getenv('USERS_TABLE_NAME'))
+    logger.info(f'CLUB REFRESH TOKEN - Getting database client.')
 
-    logger.info(f'VALIDATE USER LOGIN - Checking if user exists in the database.')
+    dynamodb = boto3.resource('dynamodb')
+    clubs_table = dynamodb.Table(os.getenv('CLUBS_TABLE_NAME'))
+
+    logger.info(f'CLUB REFRESH TOKEN - Checking if user exists.')
 
     # Find user in the table by email
     try:
-        response = users_table.get_item(
+        response = clubs_table.get_item(
             Key={
-                'email': email
+                'club_id': email
             }
         )
 
@@ -54,6 +56,8 @@ def lambda_handler(event, context):
                 })
             }
     except Exception as e:
+        logger.error(f'CLUB REFRESH TOKEN - Unable to read item: {str(e)}')
+
         return {
             'statusCode': 500,
             'headers': {
@@ -63,39 +67,30 @@ def lambda_handler(event, context):
                 'message': f"Unable to read item: {str(e)}"
             })
         }
-
-    # Check if the six digit code is correct
-    if not common_handler.check_is_six_digit_code_valid(six_digit_code, email):
+    
+    # Check if the CLUB REFRESH TOKEN is correct
+    if not common_handler.check_is_refresh_token_valid(refresh_token, is_clubs_table=True):
         return {
             'statusCode': 400,
             'headers': {
                 'Content-Type': 'application/json'
             },
             'body': json.dumps({
-                'message': 'Your six digit code has expired or is incorrect. Please request a new one.'
+                'message': 'Your session has expired. Please log in again.'
             })
         }
     
-    # Terminate the six digit code data
-    users_table.update_item(
-        Key={
-            'email': response['Item']['email']
-        },
-        UpdateExpression='REMOVE six_digit_code, six_digit_code_expiration'
-    )
-    
-    # Generate jwt and refresh tokens
+    # Generate new access token
     access_token = common_handler.generate_access_token(email)
-    refresh_token = common_handler.generate_refresh_token(users_table, email)
 
-    if not access_token or not refresh_token:
+    if not access_token:
         return {
             'statusCode': 500,
             'headers': {
                 'Content-Type': 'application/json'
             },
             'body': json.dumps({
-                'message': f"Unable to generate tokens. Please contact support."
+                'message': f"Unable to generate token. Please contact support."
             })
         }
 
@@ -105,9 +100,6 @@ def lambda_handler(event, context):
             'Content-Type': 'application/json'
         },
         'body': json.dumps({
-            'message': 'Logged in successfully, welcome!',
-            'token': access_token,
-            'refresh_token': refresh_token,
-            'event_ids': response.get('Item').get('events', [])
+            'token': access_token
         })
     }
