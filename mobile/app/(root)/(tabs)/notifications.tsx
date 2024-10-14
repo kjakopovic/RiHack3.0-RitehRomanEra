@@ -266,7 +266,7 @@ const Notifications = () => {
         // Proceed with saving the photo
         setEventPhotos((prevPhotos) => ({
           ...prevPhotos,
-          [currentEvent.event_id]: photo.base64,
+          [currentEvent.event_id]: photo,
         }));
 
         const { jwtToken } = await getTokens();
@@ -393,7 +393,7 @@ const Notifications = () => {
             <ScrollView className="p-4">
               {currentEvent && eventPhotos[currentEvent.event_id] ? (
                 <Image
-                  source={{ uri: eventPhotos[currentEvent.event_id] }}
+                  source={{ uri: eventPhotos[0] }}
                   className="w-full h-48 rounded-md mb-4"
                   resizeMode="cover"
                 />

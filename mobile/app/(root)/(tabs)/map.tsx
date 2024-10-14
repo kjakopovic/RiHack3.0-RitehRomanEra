@@ -74,6 +74,11 @@ const Map = () => {
         `https://zn44q04iq3.execute-api.eu-central-1.amazonaws.com/api-v1/club/get?longitude=${longitude}&latitude=${latitude}`
       );
       const data: GetClubsResponse = await response.json();
+
+      if (response.status === 500) {
+        console.log("Error");
+        Alert.alert("There are no events for this club");
+      }
       setClubs(data.clubs); // Store the clubs in state
       console.log("Fetched Clubs:", data.clubs);
     } catch (error) {
